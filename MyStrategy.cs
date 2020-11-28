@@ -13,7 +13,7 @@ namespace Aicup2020
         private PlayerView View { get; set; }
         private DebugInterface Debug { get; set; }
         private World Around { get; }
-        private Dictionary<int, EntityAction> Actions;
+        private Dictionary<int, EntityAction> actions;
 
         public MyStrategy()
         {
@@ -22,41 +22,41 @@ namespace Aicup2020
 
         public Action GetAction(PlayerView playerView, DebugInterface debugInterface)
         {
-            Actions = new Dictionary<int, EntityAction>();
+            actions = new Dictionary<int, EntityAction>();
             View = playerView;
             Debug = debugInterface;
 
             Around.Scan(View);
 
-            CommandBuildingsBuilders();
-            CommandRangeBuilders();
+            CommandBuildingsWorkers();
+            CommandBuildingsRange();
 
-            CommandUnitsBuilders();
+            CommandUnitsWorkers();
             CommandUnitsRanged();
             CommandUnitsMelee();
 
-            return new Action(Actions);
+            return new Action(actions);
         }
 
-        private void CommandBuildingsBuilders()
+        private void CommandBuildingsWorkers()
         {
-            var builderUnitsCount = 7;
+            var workerUnitsCount = 7;
 
-            foreach (var builderBuilding in Around.MyBuildingsBuilders)
+            foreach (var builderBuilding in Around.MyBuildingsWorkers)
             {
                 var positionToBuild = new Vec2Int(builderBuilding.Position.X + 5, builderBuilding.Position.Y);
 
-                var needBuildBuilders = Around.MyUnitsBuilders.Count() < builderUnitsCount
-                                        && Around.Me.Resource >= Around.BuilderUnitCost;
+                var needBuildBuilders = Around.MyUnitsWorkers.Count() < workerUnitsCount
+                                        && Around.Me.Resource >= Around.WorkerUnitCost;
 
                 if (needBuildBuilders)
                 {
-                    Actions.Add(builderBuilding.Id, new EntityAction(null, new BuildAction(EntityType.BuilderUnit, positionToBuild), null, null));
+                    actions.Add(builderBuilding.Id, new EntityAction(null, new BuildAction(EntityType.BuilderUnit, positionToBuild), null, null));
                 }
             }
         }
 
-        private void CommandRangeBuilders()
+        private void CommandBuildingsRange()
         {
             var rangeUnitsCount = 8;
 
@@ -69,12 +69,12 @@ namespace Aicup2020
 
                 if (needBuildRanged)
                 {
-                    Actions.Add(rangeBuilding.Id, new EntityAction(null, new BuildAction(EntityType.RangedUnit, positionToBuild), null, null));
+                    actions.Add(rangeBuilding.Id, new EntityAction(null, new BuildAction(EntityType.RangedUnit, positionToBuild), null, null));
                 }
             }
         }
 
-        private void CommandUnitsBuilders()
+        private void CommandUnitsWorkers()
         {
             // var needBuildHouse = Around.PopulationFree <= 0; // todo house builds
             // var canBuildHouse = Around.Me.Resource >= Around.HouseBuildingCost;
@@ -85,7 +85,7 @@ namespace Aicup2020
             //     Actions.Add(builderBuilding.Id, new EntityAction(null, new BuildAction(EntityType.House, position), null, null));
             // }
 
-            foreach (var builderUnit in Around.MyUnitsBuilders)
+            foreach (var builderUnit in Around.MyUnitsWorkers)
             {
                 var nearestSpice = Around.GetNearestTo(builderUnit, PlayerType.My, EntityType.Resource);
 
@@ -94,7 +94,7 @@ namespace Aicup2020
 
                 var action = new EntityAction(moveAction, null, attackAction, null);
 
-                Actions.Add(builderUnit.Id, action);
+                actions.Add(builderUnit.Id, action);
             }
         }
 
@@ -109,7 +109,7 @@ namespace Aicup2020
 
                 var action = new EntityAction(moveAction, null, attackAction, null);
 
-                Actions.Add(rangedUnit.Id, action);
+                actions.Add(rangedUnit.Id, action);
             }
         }
 
@@ -124,7 +124,7 @@ namespace Aicup2020
 
                 var action = new EntityAction(moveAction, null, attackAction, null);
 
-                Actions.Add(meleeUnit.Id, action);
+                actions.Add(meleeUnit.Id, action);
             }
         }
 
@@ -145,7 +145,7 @@ namespace Aicup2020
                 return EntityType.Turret;
             }
 
-            if (Around.EnemyUnitsBuilders.Any())
+            if (Around.EnemyUnitsWorkers.Any())
             {
                 return EntityType.BuilderUnit;
             }
@@ -160,7 +160,7 @@ namespace Aicup2020
                 return EntityType.MeleeBase;
             }
 
-            if (Around.EnemyBuildingsBuilders.Any())
+            if (Around.EnemyBuildingsWorkers.Any())
             {
                 return EntityType.BuilderBase;
             }

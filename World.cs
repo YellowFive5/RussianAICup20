@@ -14,9 +14,20 @@ namespace Aicup2020
         public int PopulationProvide { get; private set; }
         public int PopulationUse { get; private set; }
         public int PopulationFree => PopulationProvide - PopulationUse;
-        public int BuilderUnitCost { get; private set; }
+
+        #region Costs
+
+        public int WorkerUnitCost { get; private set; }
         public int RangedUnitCost { get; private set; }
+        public int MeleeUnitCost { get; private set; }
+        public int TurretUnitCost { get; private set; }
         public int HouseBuildingCost { get; private set; }
+        public int WorkersBuildingCost { get; private set; }
+        public int RangedBuildingCost { get; private set; }
+        public int MeleeBuildingCost { get; private set; }
+        public int WallBuildingCost { get; private set; }
+
+        #endregion
 
         public IEnumerable<Entity> SpiceMilange { get; private set; }
 
@@ -26,11 +37,11 @@ namespace Aicup2020
         public IEnumerable<Entity> EnemyEntities { get; private set; }
         public IEnumerable<Entity> EnemyBuildingsWalls => EnemyEntities.Where(e => e.EntityType == EntityType.Wall).ToArray();
         public IEnumerable<Entity> EnemyBuildingsHouses => EnemyEntities.Where(e => e.EntityType == EntityType.House).ToArray();
-        public IEnumerable<Entity> EnemyBuildingsBuilders => EnemyEntities.Where(e => e.EntityType == EntityType.BuilderBase).ToArray();
+        public IEnumerable<Entity> EnemyBuildingsWorkers => EnemyEntities.Where(e => e.EntityType == EntityType.BuilderBase).ToArray();
         public IEnumerable<Entity> EnemyBuildingsMelees => EnemyEntities.Where(e => e.EntityType == EntityType.MeleeBase).ToArray();
         public IEnumerable<Entity> EnemyBuildingsRanged => EnemyEntities.Where(e => e.EntityType == EntityType.RangedBase).ToArray();
         public IEnumerable<Entity> EnemyUnitsTurrets => EnemyEntities.Where(e => e.EntityType == EntityType.Turret).ToArray();
-        public IEnumerable<Entity> EnemyUnitsBuilders => EnemyEntities.Where(e => e.EntityType == EntityType.BuilderUnit).ToArray();
+        public IEnumerable<Entity> EnemyUnitsWorkers => EnemyEntities.Where(e => e.EntityType == EntityType.BuilderUnit).ToArray();
         public IEnumerable<Entity> EnemyUnitsMelees => EnemyEntities.Where(e => e.EntityType == EntityType.MeleeUnit).ToArray();
         public IEnumerable<Entity> EnemyUnitsRanged => EnemyEntities.Where(e => e.EntityType == EntityType.RangedUnit).ToArray();
 
@@ -42,11 +53,11 @@ namespace Aicup2020
         public IEnumerable<Entity> MyEntities { get; private set; }
         public IEnumerable<Entity> MyBuildingsWalls => MyEntities.Where(e => e.EntityType == EntityType.Wall).ToArray();
         public IEnumerable<Entity> MyBuildingsHouses => MyEntities.Where(e => e.EntityType == EntityType.House).ToArray();
-        public IEnumerable<Entity> MyBuildingsBuilders => MyEntities.Where(e => e.EntityType == EntityType.BuilderBase).ToArray();
+        public IEnumerable<Entity> MyBuildingsWorkers => MyEntities.Where(e => e.EntityType == EntityType.BuilderBase).ToArray();
         public IEnumerable<Entity> MyBuildingsMelees => MyEntities.Where(e => e.EntityType == EntityType.MeleeBase).ToArray();
         public IEnumerable<Entity> MyBuildingsRanged => MyEntities.Where(e => e.EntityType == EntityType.RangedBase).ToArray();
         public IEnumerable<Entity> MyUnitsTurrets => MyEntities.Where(e => e.EntityType == EntityType.Turret).ToArray();
-        public IEnumerable<Entity> MyUnitsBuilders => MyEntities.Where(e => e.EntityType == EntityType.BuilderUnit).ToArray();
+        public IEnumerable<Entity> MyUnitsWorkers => MyEntities.Where(e => e.EntityType == EntityType.BuilderUnit).ToArray();
         public IEnumerable<Entity> MyUnitsMelees => MyEntities.Where(e => e.EntityType == EntityType.MeleeUnit).ToArray();
         public IEnumerable<Entity> MyUnitsRanged => MyEntities.Where(e => e.EntityType == EntityType.RangedUnit).ToArray();
 
@@ -54,9 +65,15 @@ namespace Aicup2020
 
         public void Scan(PlayerView view)
         {
-            BuilderUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderUnit).Value.Cost;
+            WorkerUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderUnit).Value.Cost;
             RangedUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.RangedUnit).Value.Cost;
             HouseBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.House).Value.Cost;
+            MeleeUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.MeleeUnit).Value.Cost;
+            TurretUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.Turret).Value.Cost;
+            WorkersBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderBase).Value.Cost;
+            RangedBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.RangedBase).Value.Cost;
+            MeleeBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.MeleeBase).Value.Cost;
+            WallBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.Wall).Value.Cost;
 
             Me = view.Players.Single(p => p.Id == view.MyId);
             EnemyPlayers = view.Players.Where(p => p.Id != view.MyId).ToArray();
@@ -89,10 +106,10 @@ namespace Aicup2020
                             targetCollection = MyBuildingsHouses;
                             break;
                         case EntityType.BuilderBase:
-                            targetCollection = MyBuildingsBuilders;
+                            targetCollection = MyBuildingsWorkers;
                             break;
                         case EntityType.BuilderUnit:
-                            targetCollection = MyUnitsBuilders;
+                            targetCollection = MyUnitsWorkers;
                             break;
                         case EntityType.MeleeBase:
                             targetCollection = MyBuildingsMelees;
@@ -127,10 +144,10 @@ namespace Aicup2020
                             targetCollection = EnemyBuildingsHouses;
                             break;
                         case EntityType.BuilderBase:
-                            targetCollection = EnemyBuildingsBuilders;
+                            targetCollection = EnemyBuildingsWorkers;
                             break;
                         case EntityType.BuilderUnit:
-                            targetCollection = EnemyUnitsBuilders;
+                            targetCollection = EnemyUnitsWorkers;
                             break;
                         case EntityType.MeleeBase:
                             targetCollection = EnemyBuildingsMelees;
