@@ -49,10 +49,10 @@ namespace Aicup2020
                 var needBuildBuilders = Around.MyUnitsWorkers.Count() < workerUnitsCount
                                         && Around.Me.Resource >= Around.WorkerUnitCost;
 
-                if (needBuildBuilders)
-                {
-                    actions.Add(builderBuilding.Id, new EntityAction(null, new BuildAction(EntityType.BuilderUnit, positionToBuild), null, null));
-                }
+                actions.Add(builderBuilding.Id,
+                            needBuildBuilders
+                                ? new EntityAction(null, new BuildAction(EntityType.BuilderUnit, positionToBuild), null, null)
+                                : new EntityAction(null, null, null, null));
             }
         }
 
@@ -67,10 +67,10 @@ namespace Aicup2020
                 var needBuildRanged = Around.MyUnitsRanged.Count() < rangeUnitsCount
                                       && Around.Me.Resource >= Around.RangedUnitCost;
 
-                if (needBuildRanged)
-                {
-                    actions.Add(rangeBuilding.Id, new EntityAction(null, new BuildAction(EntityType.RangedUnit, positionToBuild), null, null));
-                }
+                actions.Add(rangeBuilding.Id,
+                            needBuildRanged
+                                ? new EntityAction(null, new BuildAction(EntityType.RangedUnit, positionToBuild), null, null)
+                                : new EntityAction(null, null, null, null));
             }
         }
 
