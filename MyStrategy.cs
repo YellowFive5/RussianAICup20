@@ -87,7 +87,7 @@ namespace Aicup2020
 
             foreach (var builderUnit in Around.MyUnitsWorkers)
             {
-                var nearestSpice = Around.GetNearestTo(builderUnit, PlayerType.My, EntityType.Resource);
+                var nearestSpice = Around.GetNearestEntityOfType(builderUnit, PlayerType.My, EntityType.Resource);
 
                 var moveAction = new MoveAction(nearestSpice.Position, true, false);
                 var attackAction = new AttackAction(nearestSpice.Id, null);
@@ -102,7 +102,8 @@ namespace Aicup2020
         {
             foreach (var rangedUnit in Around.MyUnitsRanged)
             {
-                var nearestEnemy = Around.GetNearestTo(rangedUnit, PlayerType.Enemy, GetEntityToAttack());
+                // var nearestEnemy = Around.GetNearestOf(rangedUnit, PlayerType.Enemy, GetEntityToAttack());
+                var nearestEnemy = Around.GetNearestEntity(rangedUnit, PlayerType.Enemy);
 
                 var moveAction = new MoveAction(nearestEnemy.Position, true, true);
                 var attackAction = new AttackAction(nearestEnemy.Id, null);
@@ -117,7 +118,8 @@ namespace Aicup2020
         {
             foreach (var meleeUnit in Around.MyUnitsMelees)
             {
-                var nearestEnemy = Around.GetNearestTo(meleeUnit, PlayerType.Enemy, GetEntityToAttack());
+                // var nearestEnemy = Around.GetNearestOf(meleeUnit, PlayerType.Enemy, GetEntityToAttack());
+                var nearestEnemy = Around.GetNearestEntity(meleeUnit, PlayerType.Enemy);
 
                 var moveAction = new MoveAction(nearestEnemy.Position, true, true);
                 var attackAction = new AttackAction(nearestEnemy.Id, null);

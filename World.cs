@@ -90,7 +90,7 @@ namespace Aicup2020
             }
         }
 
-        public Entity GetNearestTo(Entity sourceEntity, PlayerType playerType, EntityType type)
+        public Entity GetNearestEntityOfType(Entity sourceEntity, PlayerType playerType, EntityType type)
         {
             IEnumerable<Entity> targetCollection;
 
@@ -171,6 +171,38 @@ namespace Aicup2020
                             throw new ArgumentOutOfRangeException(nameof(type), type, null);
                     }
 
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(playerType), playerType, null);
+            }
+
+            double distanceBetween = 1000;
+            var nearestEntity = new Entity();
+
+            foreach (var ett in targetCollection) // todo to LINQ
+            {
+                var dst = GetDistance(ett.Position, sourceEntity.Position);
+                if (dst < distanceBetween)
+                {
+                    distanceBetween = dst;
+                    nearestEntity = ett;
+                }
+            }
+
+            return nearestEntity;
+        }
+
+        public Entity GetNearestEntity(Entity sourceEntity, PlayerType playerType)
+        {
+            IEnumerable<Entity> targetCollection;
+
+            switch (playerType)
+            {
+                case PlayerType.My:
+                    targetCollection = MyEntities;
+                    break;
+                case PlayerType.Enemy:
+                    targetCollection = EnemyEntities;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(playerType), playerType, null);
