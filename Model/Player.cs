@@ -1,3 +1,9 @@
+#region Usings
+
+using System.IO;
+
+#endregion
+
 namespace Aicup2020.Model
 {
     public struct Player
@@ -5,13 +11,15 @@ namespace Aicup2020.Model
         public int Id { get; set; }
         public int Score { get; set; }
         public int Resource { get; set; }
+
         public Player(int id, int score, int resource)
         {
-            this.Id = id;
-            this.Score = score;
-            this.Resource = resource;
+            Id = id;
+            Score = score;
+            Resource = resource;
         }
-        public static Player ReadFrom(System.IO.BinaryReader reader)
+
+        public static Player ReadFrom(BinaryReader reader)
         {
             var result = new Player();
             result.Id = reader.ReadInt32();
@@ -19,7 +27,8 @@ namespace Aicup2020.Model
             result.Resource = reader.ReadInt32();
             return result;
         }
-        public void WriteTo(System.IO.BinaryWriter writer)
+
+        public void WriteTo(BinaryWriter writer)
         {
             writer.Write(Id);
             writer.Write(Score);

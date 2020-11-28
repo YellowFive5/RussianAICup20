@@ -1,26 +1,34 @@
+#region Usings
+
 using System.IO;
+using Aicup2020.Model;
+
+#endregion
 
 namespace Aicup2020
 {
     public class DebugInterface
     {
-        private BinaryWriter writer;
-        private BinaryReader reader;
+        private readonly BinaryWriter writer;
+        private readonly BinaryReader reader;
+
         public DebugInterface(BinaryReader reader, BinaryWriter writer)
         {
             this.reader = reader;
             this.writer = writer;
         }
-        public void Send(Model.DebugCommand command)
+
+        public void Send(DebugCommand command)
         {
-            new Model.ClientMessage.DebugMessage(command).WriteTo(writer);
+            new ClientMessage.DebugMessage(command).WriteTo(writer);
             writer.Flush();
         }
-        public Model.DebugState GetState()
+
+        public DebugState GetState()
         {
-            new Model.ClientMessage.RequestDebugState().WriteTo(writer);
+            new ClientMessage.RequestDebugState().WriteTo(writer);
             writer.Flush();
-            return Model.DebugState.ReadFrom(reader);
+            return DebugState.ReadFrom(reader);
         }
     }
 }

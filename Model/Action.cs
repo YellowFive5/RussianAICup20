@@ -1,28 +1,39 @@
+#region Usings
+
+using System.Collections.Generic;
+using System.IO;
+
+#endregion
+
 namespace Aicup2020.Model
 {
     public struct Action
     {
-        public System.Collections.Generic.IDictionary<int, Model.EntityAction> EntityActions { get; set; }
-        public Action(System.Collections.Generic.IDictionary<int, Model.EntityAction> entityActions)
+        public IDictionary<int, EntityAction> EntityActions { get; set; }
+
+        public Action(IDictionary<int, EntityAction> entityActions)
         {
-            this.EntityActions = entityActions;
+            EntityActions = entityActions;
         }
-        public static Action ReadFrom(System.IO.BinaryReader reader)
+
+        public static Action ReadFrom(BinaryReader reader)
         {
             var result = new Action();
             int EntityActionsSize = reader.ReadInt32();
-            result.EntityActions = new System.Collections.Generic.Dictionary<int, Model.EntityAction>(EntityActionsSize);
+            result.EntityActions = new Dictionary<int, EntityAction>(EntityActionsSize);
             for (int i = 0; i < EntityActionsSize; i++)
             {
                 int EntityActionsKey;
                 EntityActionsKey = reader.ReadInt32();
-                Model.EntityAction EntityActionsValue;
-                EntityActionsValue = Model.EntityAction.ReadFrom(reader);
+                EntityAction EntityActionsValue;
+                EntityActionsValue = EntityAction.ReadFrom(reader);
                 result.EntityActions.Add(EntityActionsKey, EntityActionsValue);
             }
+
             return result;
         }
-        public void WriteTo(System.IO.BinaryWriter writer)
+
+        public void WriteTo(BinaryWriter writer)
         {
             writer.Write(EntityActions.Count);
             foreach (var EntityActionsEntry in EntityActions)

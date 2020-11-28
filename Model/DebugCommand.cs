@@ -1,9 +1,17 @@
+#region Usings
+
+using System;
+using System.IO;
+
+#endregion
+
 namespace Aicup2020.Model
 {
     public abstract class DebugCommand
     {
-        public abstract void WriteTo(System.IO.BinaryWriter writer);
-        public static DebugCommand ReadFrom(System.IO.BinaryReader reader)
+        public abstract void WriteTo(BinaryWriter writer);
+
+        public static DebugCommand ReadFrom(BinaryReader reader)
         {
             switch (reader.ReadInt32())
             {
@@ -12,26 +20,32 @@ namespace Aicup2020.Model
                 case Clear.TAG:
                     return Clear.ReadFrom(reader);
                 default:
-                    throw new System.Exception("Unexpected tag value");
+                    throw new Exception("Unexpected tag value");
             }
         }
 
         public class Add : DebugCommand
         {
             public const int TAG = 0;
-            public Model.DebugData Data { get; set; }
-            public Add() {}
-            public Add(Model.DebugData data)
+            public DebugData Data { get; set; }
+
+            public Add()
             {
-                this.Data = data;
             }
-            public static new Add ReadFrom(System.IO.BinaryReader reader)
+
+            public Add(DebugData data)
+            {
+                Data = data;
+            }
+
+            public static new Add ReadFrom(BinaryReader reader)
             {
                 var result = new Add();
-                result.Data = Model.DebugData.ReadFrom(reader);
+                result.Data = DebugData.ReadFrom(reader);
                 return result;
             }
-            public override void WriteTo(System.IO.BinaryWriter writer)
+
+            public override void WriteTo(BinaryWriter writer)
             {
                 writer.Write(TAG);
                 Data.WriteTo(writer);
@@ -41,13 +55,14 @@ namespace Aicup2020.Model
         public class Clear : DebugCommand
         {
             public const int TAG = 1;
-            public Clear() {}
-            public static new Clear ReadFrom(System.IO.BinaryReader reader)
+
+            public static new Clear ReadFrom(BinaryReader reader)
             {
                 var result = new Clear();
                 return result;
             }
-            public override void WriteTo(System.IO.BinaryWriter writer)
+
+            public override void WriteTo(BinaryWriter writer)
             {
                 writer.Write(TAG);
             }

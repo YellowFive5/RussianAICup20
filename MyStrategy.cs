@@ -1,4 +1,9 @@
+#region Usings
+
+using System.Collections.Generic;
 using Aicup2020.Model;
+
+#endregion
 
 namespace Aicup2020
 {
@@ -6,10 +11,10 @@ namespace Aicup2020
     {
         public Action GetAction(PlayerView playerView, DebugInterface debugInterface)
         {
-            return new Action(new System.Collections.Generic.Dictionary<int, Model.EntityAction>(0));
+            return new Action(new Dictionary<int, EntityAction>(0));
         }
 
-        public void DebugUpdate(PlayerView playerView, DebugInterface debugInterface) 
+        public void DebugUpdate(PlayerView playerView, DebugInterface debugInterface)
         {
             debugInterface.Send(new DebugCommand.Clear());
             debugInterface.GetState();

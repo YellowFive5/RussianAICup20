@@ -1,9 +1,17 @@
+#region Usings
+
+using System;
+using System.IO;
+
+#endregion
+
 namespace Aicup2020.Model
 {
     public abstract class ClientMessage
     {
-        public abstract void WriteTo(System.IO.BinaryWriter writer);
-        public static ClientMessage ReadFrom(System.IO.BinaryReader reader)
+        public abstract void WriteTo(BinaryWriter writer);
+
+        public static ClientMessage ReadFrom(BinaryReader reader)
         {
             switch (reader.ReadInt32())
             {
@@ -16,26 +24,32 @@ namespace Aicup2020.Model
                 case RequestDebugState.TAG:
                     return RequestDebugState.ReadFrom(reader);
                 default:
-                    throw new System.Exception("Unexpected tag value");
+                    throw new Exception("Unexpected tag value");
             }
         }
 
         public class DebugMessage : ClientMessage
         {
             public const int TAG = 0;
-            public Model.DebugCommand Command { get; set; }
-            public DebugMessage() {}
-            public DebugMessage(Model.DebugCommand command)
+            public DebugCommand Command { get; set; }
+
+            public DebugMessage()
             {
-                this.Command = command;
             }
-            public static new DebugMessage ReadFrom(System.IO.BinaryReader reader)
+
+            public DebugMessage(DebugCommand command)
+            {
+                Command = command;
+            }
+
+            public static new DebugMessage ReadFrom(BinaryReader reader)
             {
                 var result = new DebugMessage();
-                result.Command = Model.DebugCommand.ReadFrom(reader);
+                result.Command = DebugCommand.ReadFrom(reader);
                 return result;
             }
-            public override void WriteTo(System.IO.BinaryWriter writer)
+
+            public override void WriteTo(BinaryWriter writer)
             {
                 writer.Write(TAG);
                 Command.WriteTo(writer);
@@ -45,19 +59,25 @@ namespace Aicup2020.Model
         public class ActionMessage : ClientMessage
         {
             public const int TAG = 1;
-            public Model.Action Action { get; set; }
-            public ActionMessage() {}
-            public ActionMessage(Model.Action action)
+            public Action Action { get; set; }
+
+            public ActionMessage()
             {
-                this.Action = action;
             }
-            public static new ActionMessage ReadFrom(System.IO.BinaryReader reader)
+
+            public ActionMessage(Action action)
+            {
+                Action = action;
+            }
+
+            public static new ActionMessage ReadFrom(BinaryReader reader)
             {
                 var result = new ActionMessage();
-                result.Action = Model.Action.ReadFrom(reader);
+                result.Action = Action.ReadFrom(reader);
                 return result;
             }
-            public override void WriteTo(System.IO.BinaryWriter writer)
+
+            public override void WriteTo(BinaryWriter writer)
             {
                 writer.Write(TAG);
                 Action.WriteTo(writer);
@@ -67,13 +87,14 @@ namespace Aicup2020.Model
         public class DebugUpdateDone : ClientMessage
         {
             public const int TAG = 2;
-            public DebugUpdateDone() {}
-            public static new DebugUpdateDone ReadFrom(System.IO.BinaryReader reader)
+
+            public static new DebugUpdateDone ReadFrom(BinaryReader reader)
             {
                 var result = new DebugUpdateDone();
                 return result;
             }
-            public override void WriteTo(System.IO.BinaryWriter writer)
+
+            public override void WriteTo(BinaryWriter writer)
             {
                 writer.Write(TAG);
             }
@@ -82,13 +103,14 @@ namespace Aicup2020.Model
         public class RequestDebugState : ClientMessage
         {
             public const int TAG = 3;
-            public RequestDebugState() {}
-            public static new RequestDebugState ReadFrom(System.IO.BinaryReader reader)
+
+            public static new RequestDebugState ReadFrom(BinaryReader reader)
             {
                 var result = new RequestDebugState();
                 return result;
             }
-            public override void WriteTo(System.IO.BinaryWriter writer)
+
+            public override void WriteTo(BinaryWriter writer)
             {
                 writer.Write(TAG);
             }
