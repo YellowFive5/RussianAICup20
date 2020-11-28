@@ -11,10 +11,15 @@ namespace Aicup2020
 {
     public class World
     {
-
+        public int PopulationProvide { get; private set; }
+        public int PopulationUse { get; private set; }
+        public int PopulationFree => PopulationProvide - PopulationUse;
         public int BuilderUnitCost { get; private set; }
+        public int RangedUnitCost { get; private set; }
+        public int HouseBuildingCost { get; private set; }
+
         public IEnumerable<Entity> SpiceMilange { get; private set; }
-        
+
         #region Enemy
 
         public IEnumerable<Player> EnemyPlayers { get; private set; }
@@ -49,13 +54,23 @@ namespace Aicup2020
 
         public void Scan(PlayerView view)
         {
+            BuilderUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderUnit).Value.Cost;
+            RangedUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.RangedUnit).Value.Cost;
+            HouseBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.House).Value.Cost;
+
             Me = view.Players.Single(p => p.Id == view.MyId);
             EnemyPlayers = view.Players.Where(p => p.Id != view.MyId).ToArray();
             SpiceMilange = view.Entities.Where(e => e.EntityType == EntityType.Resource).ToArray();
             EnemyEntities = view.Entities.Where(e => e.PlayerId != view.MyId && e.EntityType != EntityType.Resource).ToArray();
             MyEntities = view.Entities.Where(e => e.PlayerId == view.MyId).ToArray();
 
-            BuilderUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderUnit).Value.Cost;
+            PopulationProvide = 0;
+            PopulationUse = 0;
+            foreach (var entity in MyEntities)
+            {
+                PopulationProvide += view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.PopulationProvide;
+                PopulationUse += view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.PopulationUse;
+            }
         }
 
         public Entity GetNearestTo(Entity sourceEntity, PlayerType playerType, EntityType type)
