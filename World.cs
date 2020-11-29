@@ -18,7 +18,7 @@ namespace Aicup2020
         public bool CanBuildHouse => Me.Resource >= HouseBuildingCost;
 
         public bool NeedRepairBuildings => MyBuildingsBroken.Any();
-        public bool NeedRepairHouses => MyBuildingsBroken.Any(bb=>bb.EntityType == EntityType.House);
+        public bool NeedRepairHouses => MyBuildingsBroken.Any(bb => bb.EntityType == EntityType.House);
 
         #region Costs
 
@@ -36,7 +36,7 @@ namespace Aicup2020
 
         public IEnumerable<Entity> SpiceMilange { get; private set; }
 
-        public IEnumerable<Vec2Int> FreeSpace { get; private set; }
+        public List<Vec2Int> NotFreeSpace { get; private set; }
 
         #region Enemy
 
@@ -95,7 +95,7 @@ namespace Aicup2020
             EnemyEntities = view.Entities.Where(e => e.PlayerId != view.MyId && e.EntityType != EntityType.Resource).ToArray();
             MyEntities = view.Entities.Where(e => e.PlayerId == view.MyId).ToArray();
             MyBuildingsBroken = MyBuildings.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth);
-            
+
             PopulationProvide = 0;
             PopulationUse = 0;
             foreach (var entity in MyEntities)
@@ -104,11 +104,19 @@ namespace Aicup2020
                 PopulationUse += view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.PopulationUse;
             }
 
-
-            // foreach (var entity in view.Entities)
-            // {
-            //     view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.Size
-            // }
+            NotFreeSpace = new List<Vec2Int>();
+            foreach (var entity in view.Entities)
+            {
+                var size = view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.Size;
+                for (var x = 0; x < size; x++)
+                {
+                    for (var y = 0; y < size; y++)
+                    {
+                        NotFreeSpace.Add(new Vec2Int(entity.Position.X + x,
+                                                     entity.Position.Y + y));
+                    }
+                }
+            }
         }
 
         public Entity GetNearestEntityOfType(Entity sourceEntity, PlayerType playerType, EntityType type)
