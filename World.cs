@@ -15,6 +15,7 @@ namespace Aicup2020
         public int PopulationUse { get; private set; }
         public int PopulationFree => PopulationProvide - PopulationUse;
         public bool NeedBuildHouse => PopulationFree <= 1;
+        public bool CanBuildHouse => Me.Resource >= HouseBuildingCost;
 
         #region Costs
 
@@ -31,6 +32,8 @@ namespace Aicup2020
         #endregion
 
         public IEnumerable<Entity> SpiceMilange { get; private set; }
+        
+        public IEnumerable<Vec2Int> FreeSpace { get; private set; }
 
         #region Enemy
 
@@ -89,6 +92,11 @@ namespace Aicup2020
                 PopulationProvide += view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.PopulationProvide;
                 PopulationUse += view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.PopulationUse;
             }
+
+            // foreach (var entity in view.Entities)
+            // {
+            //     view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.Size
+            // }
         }
 
         public Entity GetNearestEntityOfType(Entity sourceEntity, PlayerType playerType, EntityType type)

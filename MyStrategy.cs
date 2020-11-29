@@ -78,24 +78,23 @@ namespace Aicup2020
         {
             foreach (var builderUnit in Around.MyUnitsWorkers)
             {
-                var nearestSpice = Around.GetNearestEntityOfType(builderUnit, PlayerType.My, EntityType.Resource);
+                if (Around.NeedBuildHouse && Around.CanBuildHouse)
+                {
+                    var position = new Vec2Int(builderUnit.Position.X + 1, builderUnit.Position.Y);
+                    actions.Remove(builderUnit.Id);
+                    actions.Add(builderUnit.Id, new EntityAction(null, new BuildAction(EntityType.House, position), null, null));
+                }
+                else
+                {
+                    var nearestSpice = Around.GetNearestEntityOfType(builderUnit, PlayerType.My, EntityType.Resource);
 
-                var moveAction = new MoveAction(nearestSpice.Position, true, false);
-                var attackAction = new AttackAction(nearestSpice.Id, null);
+                    var moveAction = new MoveAction(nearestSpice.Position, true, false);
+                    var attackAction = new AttackAction(nearestSpice.Id, null);
+                    var action = new EntityAction(moveAction, null, attackAction, null);
 
-                var action = new EntityAction(moveAction, null, attackAction, null);
-
-                actions.Add(builderUnit.Id, action);
+                    actions.Add(builderUnit.Id, action);
+                }
             }
-            //
-            // var canBuildHouse = Around.Me.Resource >= Around.HouseBuildingCost;
-            // if (Around.NeedBuildHouse && canBuildHouse)
-            // {
-            //     var firstWorker = Around.MyUnitsWorkers.First();
-            //     var position = new Vec2Int(firstWorker.Position.X + 1, firstWorker.Position.Y);
-            //     actions.Remove(firstWorker.Id);
-            //     actions.Add(firstWorker.Id, new EntityAction(null, new BuildAction(EntityType.House, position), null, null));
-            // }
         }
 
         private void CommandUnitsRanged()
