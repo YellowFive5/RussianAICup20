@@ -78,10 +78,17 @@ namespace Aicup2020
         {
             foreach (var builderUnit in Around.MyUnitsWorkers)
             {
-                if (Around.NeedBuildHouse && Around.CanBuildHouse)
+                if (Around.NeedRepairHouses)
+                {
+                    var buildingToRepair = Around.MyBuildingsBroken.First();
+                    var moveAction = new MoveAction(buildingToRepair.Position, true, false);
+                    var repairAction = new RepairAction(buildingToRepair.Id);
+                    actions.Add(builderUnit.Id, new EntityAction(moveAction, null, null, repairAction));
+
+                }
+                else if (Around.NeedBuildHouse && Around.CanBuildHouse)
                 {
                     var position = new Vec2Int(builderUnit.Position.X + 1, builderUnit.Position.Y);
-                    actions.Remove(builderUnit.Id);
                     actions.Add(builderUnit.Id, new EntityAction(null, new BuildAction(EntityType.House, position), null, null));
                 }
                 else

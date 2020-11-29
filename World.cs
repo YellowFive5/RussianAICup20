@@ -17,6 +17,9 @@ namespace Aicup2020
         public bool NeedBuildHouse => PopulationFree <= 1;
         public bool CanBuildHouse => Me.Resource >= HouseBuildingCost;
 
+        public bool NeedRepairBuildings => MyBuildingsBroken.Any();
+        public bool NeedRepairHouses => MyBuildingsBroken.Any(bb=>bb.EntityType == EntityType.House);
+
         #region Costs
 
         public int WorkerUnitCost { get; private set; }
@@ -32,18 +35,22 @@ namespace Aicup2020
         #endregion
 
         public IEnumerable<Entity> SpiceMilange { get; private set; }
-        
+
         public IEnumerable<Vec2Int> FreeSpace { get; private set; }
 
         #region Enemy
 
         public IEnumerable<Player> EnemyPlayers { get; private set; }
         public IEnumerable<Entity> EnemyEntities { get; private set; }
+        public IEnumerable<Entity> EnemyBuildings => EnemyBuildingsWalls.Union(EnemyBuildingsHouses).Union(EnemyBuildingsWorkers).Union(EnemyBuildingsMelees).Union(EnemyBuildingsRanged).ToList();
+
         public IEnumerable<Entity> EnemyBuildingsWalls => EnemyEntities.Where(e => e.EntityType == EntityType.Wall).ToArray();
         public IEnumerable<Entity> EnemyBuildingsHouses => EnemyEntities.Where(e => e.EntityType == EntityType.House).ToArray();
         public IEnumerable<Entity> EnemyBuildingsWorkers => EnemyEntities.Where(e => e.EntityType == EntityType.BuilderBase).ToArray();
         public IEnumerable<Entity> EnemyBuildingsMelees => EnemyEntities.Where(e => e.EntityType == EntityType.MeleeBase).ToArray();
         public IEnumerable<Entity> EnemyBuildingsRanged => EnemyEntities.Where(e => e.EntityType == EntityType.RangedBase).ToArray();
+        public IEnumerable<Entity> EnemyUnits => EnemyUnitsTurrets.Union(EnemyUnitsWorkers).Union(EnemyUnitsMelees).Union(EnemyUnitsRanged).ToList();
+
         public IEnumerable<Entity> EnemyUnitsTurrets => EnemyEntities.Where(e => e.EntityType == EntityType.Turret).ToArray();
         public IEnumerable<Entity> EnemyUnitsWorkers => EnemyEntities.Where(e => e.EntityType == EntityType.BuilderUnit).ToArray();
         public IEnumerable<Entity> EnemyUnitsMelees => EnemyEntities.Where(e => e.EntityType == EntityType.MeleeUnit).ToArray();
@@ -55,11 +62,14 @@ namespace Aicup2020
 
         public Player Me { get; private set; }
         public IEnumerable<Entity> MyEntities { get; private set; }
+        public IEnumerable<Entity> MyBuildings => MyBuildingsRanged.Union(MyBuildingsMelees).Union(MyBuildingsWorkers).Union(MyBuildingsHouses).Union(MyBuildingsWalls).ToList();
+        public IEnumerable<Entity> MyBuildingsBroken { get; private set; }
         public IEnumerable<Entity> MyBuildingsWalls => MyEntities.Where(e => e.EntityType == EntityType.Wall).ToArray();
         public IEnumerable<Entity> MyBuildingsHouses => MyEntities.Where(e => e.EntityType == EntityType.House).ToArray();
         public IEnumerable<Entity> MyBuildingsWorkers => MyEntities.Where(e => e.EntityType == EntityType.BuilderBase).ToArray();
         public IEnumerable<Entity> MyBuildingsMelees => MyEntities.Where(e => e.EntityType == EntityType.MeleeBase).ToArray();
         public IEnumerable<Entity> MyBuildingsRanged => MyEntities.Where(e => e.EntityType == EntityType.RangedBase).ToArray();
+        public IEnumerable<Entity> MyUnits => MyUnitsWorkers.Union(MyUnitsMelees).Union(MyUnitsRanged).Union(MyUnitsTurrets).ToList();
         public IEnumerable<Entity> MyUnitsTurrets => MyEntities.Where(e => e.EntityType == EntityType.Turret).ToArray();
         public IEnumerable<Entity> MyUnitsWorkers => MyEntities.Where(e => e.EntityType == EntityType.BuilderUnit).ToArray();
         public IEnumerable<Entity> MyUnitsMelees => MyEntities.Where(e => e.EntityType == EntityType.MeleeUnit).ToArray();
@@ -84,7 +94,8 @@ namespace Aicup2020
             SpiceMilange = view.Entities.Where(e => e.EntityType == EntityType.Resource).ToArray();
             EnemyEntities = view.Entities.Where(e => e.PlayerId != view.MyId && e.EntityType != EntityType.Resource).ToArray();
             MyEntities = view.Entities.Where(e => e.PlayerId == view.MyId).ToArray();
-
+            MyBuildingsBroken = MyBuildings.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth);
+            
             PopulationProvide = 0;
             PopulationUse = 0;
             foreach (var entity in MyEntities)
@@ -92,6 +103,7 @@ namespace Aicup2020
                 PopulationProvide += view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.PopulationProvide;
                 PopulationUse += view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.PopulationUse;
             }
+
 
             // foreach (var entity in view.Entities)
             // {
