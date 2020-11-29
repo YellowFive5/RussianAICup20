@@ -14,6 +14,7 @@ namespace Aicup2020
         public int PopulationProvide { get; private set; }
         public int PopulationUse { get; private set; }
         public int PopulationFree => PopulationProvide - PopulationUse;
+        public bool NeedBuildHouse => PopulationFree <= 1;
 
         #region Costs
 

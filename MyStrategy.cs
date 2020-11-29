@@ -40,7 +40,7 @@ namespace Aicup2020
 
         private void CommandBuildingsWorkers()
         {
-            var workerUnitsCount = 7;
+            var workerUnitsCount = (int) (Around.PopulationProvide * 0.33);
 
             foreach (var builderBuilding in Around.MyBuildingsWorkers)
             {
@@ -58,7 +58,7 @@ namespace Aicup2020
 
         private void CommandBuildingsRange()
         {
-            var rangeUnitsCount = 8;
+            var rangeUnitsCount = (int) (Around.PopulationProvide * 0.67);
 
             foreach (var rangeBuilding in Around.MyBuildingsRanged)
             {
@@ -76,15 +76,6 @@ namespace Aicup2020
 
         private void CommandUnitsWorkers()
         {
-            // var needBuildHouse = Around.PopulationFree <= 0; // todo house builds
-            // var canBuildHouse = Around.Me.Resource >= Around.HouseBuildingCost;
-            //
-            // if (needBuildHouse && canBuildHouse)
-            // {
-            //     var position = new Vec2Int(builderBuilding.Position.X + 10, builderBuilding.Position.Y + 10);
-            //     Actions.Add(builderBuilding.Id, new EntityAction(null, new BuildAction(EntityType.House, position), null, null));
-            // }
-
             foreach (var builderUnit in Around.MyUnitsWorkers)
             {
                 var nearestSpice = Around.GetNearestEntityOfType(builderUnit, PlayerType.My, EntityType.Resource);
@@ -96,13 +87,21 @@ namespace Aicup2020
 
                 actions.Add(builderUnit.Id, action);
             }
+            //
+            // var canBuildHouse = Around.Me.Resource >= Around.HouseBuildingCost;
+            // if (Around.NeedBuildHouse && canBuildHouse)
+            // {
+            //     var firstWorker = Around.MyUnitsWorkers.First();
+            //     var position = new Vec2Int(firstWorker.Position.X + 1, firstWorker.Position.Y);
+            //     actions.Remove(firstWorker.Id);
+            //     actions.Add(firstWorker.Id, new EntityAction(null, new BuildAction(EntityType.House, position), null, null));
+            // }
         }
 
         private void CommandUnitsRanged()
         {
             foreach (var rangedUnit in Around.MyUnitsRanged)
             {
-                // var nearestEnemy = Around.GetNearestOf(rangedUnit, PlayerType.Enemy, GetEntityToAttack());
                 var nearestEnemy = Around.GetNearestEntity(rangedUnit, PlayerType.Enemy);
 
                 var moveAction = new MoveAction(nearestEnemy.Position, true, true);
@@ -118,7 +117,6 @@ namespace Aicup2020
         {
             foreach (var meleeUnit in Around.MyUnitsMelees)
             {
-                // var nearestEnemy = Around.GetNearestOf(meleeUnit, PlayerType.Enemy, GetEntityToAttack());
                 var nearestEnemy = Around.GetNearestEntity(meleeUnit, PlayerType.Enemy);
 
                 var moveAction = new MoveAction(nearestEnemy.Position, true, true);
