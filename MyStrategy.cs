@@ -1,8 +1,10 @@
 #region Usings
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Aicup2020.Model;
+using Action = Aicup2020.Model.Action;
 
 #endregion
 
@@ -42,9 +44,12 @@ namespace Aicup2020
         {
             var workerUnitsCount = (int) (Around.PopulationProvide * 0.33);
 
+            var lstX = new List<int> {-1, 5};
+
             foreach (var builderBuilding in Around.MyBuildingsWorkers)
             {
-                var positionToBuild = new Vec2Int(builderBuilding.Position.X + 5, builderBuilding.Position.Y);
+                var positionToBuild = new Vec2Int(builderBuilding.Position.X + new Random().Next(0, 5),
+                                                  builderBuilding.Position.Y + lstX.ElementAt(new Random().Next(lstX.Count)));
 
                 var needBuildBuilders = Around.MyUnitsWorkers.Count() < workerUnitsCount
                                         && Around.Me.Resource >= Around.WorkerUnitCost;
@@ -60,9 +65,12 @@ namespace Aicup2020
         {
             var rangeUnitsCount = (int) (Around.PopulationProvide * 0.67);
 
+            var lstX = new List<int> {-1, 5};
+
             foreach (var rangeBuilding in Around.MyBuildingsRanged)
             {
-                var positionToBuild = new Vec2Int(rangeBuilding.Position.X + 5, rangeBuilding.Position.Y);
+                var positionToBuild = new Vec2Int(rangeBuilding.Position.X + new Random().Next(0, 5),
+                                                  rangeBuilding.Position.Y + lstX.ElementAt(new Random().Next(lstX.Count)));
 
                 var needBuildRanged = Around.MyUnitsRanged.Count() < rangeUnitsCount
                                       && Around.Me.Resource >= Around.RangedUnitCost;
@@ -84,7 +92,6 @@ namespace Aicup2020
                     var moveAction = new MoveAction(buildingToRepair.Position, true, false);
                     var repairAction = new RepairAction(buildingToRepair.Id);
                     actions.Add(builderUnit.Id, new EntityAction(moveAction, null, null, repairAction));
-
                 }
                 else if (Around.NeedBuildHouse && Around.CanBuildHouse)
                 {
