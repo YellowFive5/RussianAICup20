@@ -94,7 +94,7 @@ namespace Aicup2020
             SpiceMilange = view.Entities.Where(e => e.EntityType == EntityType.Resource).ToArray();
             EnemyEntities = view.Entities.Where(e => e.PlayerId != view.MyId && e.EntityType != EntityType.Resource).ToArray();
             MyEntities = view.Entities.Where(e => e.PlayerId == view.MyId).ToArray();
-            MyBuildingsBroken = MyBuildings.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth);
+            MyBuildingsBroken = MyBuildings.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth).Union(MyUnitsTurrets.Where(t=>t.Health < view.EntityProperties.Single(ep => ep.Key == t.EntityType).Value.MaxHealth));
 
             PopulationProvide = 0;
             PopulationUse = 0;

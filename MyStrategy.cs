@@ -36,6 +36,7 @@ namespace Aicup2020
             CommandUnitsWorkers();
             CommandUnitsRanged();
             CommandUnitsMelee();
+            CommandUnitsTurrets();
 
             return new Action(actions);
         }
@@ -144,6 +145,20 @@ namespace Aicup2020
                 var action = new EntityAction(moveAction, null, attackAction, null);
 
                 actions.Add(meleeUnit.Id, action);
+            }
+        }
+
+        private void CommandUnitsTurrets()
+        {
+            foreach (var turretUnit in Around.MyUnitsTurrets)
+            {
+                var nearestEnemy = Around.GetNearestEntity(turretUnit, PlayerType.Enemy);
+
+                var attackAction = new AttackAction(nearestEnemy.Id, null);
+
+                var action = new EntityAction(null, null, attackAction, null);
+
+                actions.Add(turretUnit.Id, action);
             }
         }
 
