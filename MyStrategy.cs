@@ -88,14 +88,7 @@ namespace Aicup2020
 
             foreach (var builderUnit in Around.MyUnitsWorkers)
             {
-                if (Around.NeedRepairHouses)
-                {
-                    var buildingToRepair = Around.MyBuildingsBroken.First();
-                    var moveAction = new MoveAction(buildingToRepair.Position, true, false);
-                    var repairAction = new RepairAction(buildingToRepair.Id);
-                    actions.Add(builderUnit.Id, new EntityAction(moveAction, null, null, repairAction));
-                }
-                else if (Around.NeedBuildHouse && Around.CanBuildHouse)
+                if (Around.NeedBuildHouse && Around.CanBuildHouse)
                 {
                     var position = new Vec2Int(builderUnit.Position.X + lstXY.ElementAt(new Random().Next(lstXY.Count)),
                                                builderUnit.Position.Y + lstXY.ElementAt(new Random().Next(lstXY.Count)));
@@ -111,6 +104,16 @@ namespace Aicup2020
 
                     actions.Add(builderUnit.Id, action);
                 }
+            }
+
+            foreach (var brokenBuilding in Around.MyBuildingsBroken)
+            {
+                var nearestBuilder = Around.GetNearestEntityOfType(brokenBuilding, PlayerType.My, EntityType.BuilderUnit);
+                actions.Remove(nearestBuilder.Id);
+                
+                var moveAction = new MoveAction(brokenBuilding.Position, true, false);
+                var repairAction = new RepairAction(brokenBuilding.Id);
+                actions.Add(nearestBuilder.Id, new EntityAction(moveAction, null, null, repairAction));
             }
         }
 
