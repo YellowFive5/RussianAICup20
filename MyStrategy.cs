@@ -42,14 +42,14 @@ namespace Aicup2020
 
         private void CommandBuildingsWorkers()
         {
-            var workerUnitsCount = (int) (Around.PopulationProvide * 0.33);
+            var workerUnitsCount = (int) (Around.PopulationProvide * 0.4);
 
             var lstX = new List<int> {-1, 5};
 
             foreach (var builderBuilding in Around.MyBuildingsWorkers)
             {
-                var positionToBuild = new Vec2Int(builderBuilding.Position.X + new Random().Next(0, 5),
-                                                  builderBuilding.Position.Y + lstX.ElementAt(new Random().Next(lstX.Count)));
+                var positionToBuild = new Vec2Int(builderBuilding.Position.X + lstX.ElementAt(new Random().Next(lstX.Count)),
+                                                  builderBuilding.Position.Y + new Random().Next(0, 5));
 
                 var needBuildBuilders = Around.MyUnitsWorkers.Count() < workerUnitsCount
                                         && Around.Me.Resource >= Around.WorkerUnitCost;
@@ -63,14 +63,14 @@ namespace Aicup2020
 
         private void CommandBuildingsRange()
         {
-            var rangeUnitsCount = (int) (Around.PopulationProvide * 0.67);
+            var rangeUnitsCount = (int) (Around.PopulationProvide * 0.6);
 
             var lstX = new List<int> {-1, 5};
 
             foreach (var rangeBuilding in Around.MyBuildingsRanged)
             {
-                var positionToBuild = new Vec2Int(rangeBuilding.Position.X + new Random().Next(0, 5),
-                                                  rangeBuilding.Position.Y + lstX.ElementAt(new Random().Next(lstX.Count)));
+                var positionToBuild = new Vec2Int(rangeBuilding.Position.X + lstX.ElementAt(new Random().Next(lstX.Count)),
+                                                  rangeBuilding.Position.Y + new Random().Next(0, 5));
 
                 var needBuildRanged = Around.MyUnitsRanged.Count() < rangeUnitsCount
                                       && Around.Me.Resource >= Around.RangedUnitCost;
@@ -84,6 +84,8 @@ namespace Aicup2020
 
         private void CommandUnitsWorkers()
         {
+            var lstXY = new List<int> {-1, 1};
+
             foreach (var builderUnit in Around.MyUnitsWorkers)
             {
                 if (Around.NeedRepairHouses)
@@ -95,7 +97,8 @@ namespace Aicup2020
                 }
                 else if (Around.NeedBuildHouse && Around.CanBuildHouse)
                 {
-                    var position = new Vec2Int(builderUnit.Position.X + 1, builderUnit.Position.Y);
+                    var position = new Vec2Int(builderUnit.Position.X + lstXY.ElementAt(new Random().Next(lstXY.Count)),
+                                               builderUnit.Position.Y + lstXY.ElementAt(new Random().Next(lstXY.Count)));
                     actions.Add(builderUnit.Id, new EntityAction(null, new BuildAction(EntityType.House, position), null, null));
                 }
                 else
