@@ -29,6 +29,7 @@ namespace Aicup2020
             Debug = debugInterface;
 
             Around.Scan(View);
+            Around.ChooseBehavior();
 
             CommandBuildingsWorkers();
             CommandBuildingsRange();
@@ -43,7 +44,9 @@ namespace Aicup2020
 
         private void CommandBuildingsWorkers()
         {
-            var workerUnitsCount = (int) (Around.PopulationProvide * 0.4);
+            var workerUnitsCount = Around.Behavior == BehaviorType.Passive
+                                       ? (int) (Around.PopulationProvide * 0.8)
+                                       : (int) (Around.PopulationProvide * 0.2);
 
             var lstX = new List<int> {-1, 5};
 
@@ -64,7 +67,9 @@ namespace Aicup2020
 
         private void CommandBuildingsRange()
         {
-            var rangeUnitsCount = (int) (Around.PopulationProvide * 0.6);
+            var rangeUnitsCount = Around.Behavior == BehaviorType.Passive
+                                      ? (int) (Around.PopulationProvide * 0.2)
+                                      : (int) (Around.PopulationProvide * 0.8);
 
             var lstX = new List<int> {-1, 5};
 
@@ -96,11 +101,11 @@ namespace Aicup2020
                 actions.Add(builderUnit.Id, action);
             }
 
-            if (Around.NeedBuildHouse && Around.CanBuildHouse) // New houses needs
+            if (Around.NeedBuildHouse)
             {
                 SendNearestWorkerToBuild(EntityType.House);
             }
-            
+
             foreach (var brokenBuilding in Around.MyBuildingsBroken) // Repair needs
             {
                 var nearestBuilder = Around.GetNearestEntityOfType(brokenBuilding, PlayerType.My, EntityType.BuilderUnit);
@@ -109,6 +114,16 @@ namespace Aicup2020
                 var moveAction = new MoveAction(brokenBuilding.Position, true, false);
                 var repairAction = new RepairAction(brokenBuilding.Id);
                 actions.Add(nearestBuilder.Id, new EntityAction(moveAction, null, null, repairAction));
+            }
+
+            if (Around.NeedBuildBuildingRanged)
+            {
+                SendNearestWorkerToBuild(EntityType.RangedBase);
+            }
+
+            if (Around.NeedBuildBuildingWorkers)
+            {
+                SendNearestWorkerToBuild(EntityType.BuilderBase);
             }
         }
 
@@ -220,12 +235,23 @@ namespace Aicup2020
         {
             foreach (var rangedUnit in Around.MyUnitsRanged)
             {
-                var nearestEnemy = Around.GetNearestEntity(rangedUnit, PlayerType.Enemy);
+                var moveAction = new MoveAction();
+                var attackAction = new AttackAction();
+                var action = new EntityAction();
 
-                var moveAction = new MoveAction(nearestEnemy.Position, true, true);
-                var attackAction = new AttackAction(nearestEnemy.Id, null);
+                if (Around.Behavior == BehaviorType.Aggressive)
+                {
+                    var nearestEnemy = Around.GetNearestEntity(rangedUnit, PlayerType.Enemy);
+                    moveAction = new MoveAction(nearestEnemy.Position, true, false);
+                    attackAction = new AttackAction(nearestEnemy.Id, null);
+                }
+                else
+                {
+                    moveAction = new MoveAction(rangedUnit.Position, true, false);
+                    attackAction = new AttackAction(null, null);
+                }
 
-                var action = new EntityAction(moveAction, null, attackAction, null);
+                action = new EntityAction(moveAction, null, attackAction, null);
 
                 actions.Add(rangedUnit.Id, action);
             }
@@ -235,12 +261,23 @@ namespace Aicup2020
         {
             foreach (var meleeUnit in Around.MyUnitsMelees)
             {
-                var nearestEnemy = Around.GetNearestEntity(meleeUnit, PlayerType.Enemy);
+                var moveAction = new MoveAction();
+                var attackAction = new AttackAction();
+                var action = new EntityAction();
 
-                var moveAction = new MoveAction(nearestEnemy.Position, true, true);
-                var attackAction = new AttackAction(nearestEnemy.Id, null);
+                if (Around.Behavior == BehaviorType.Aggressive)
+                {
+                    var nearestEnemy = Around.GetNearestEntity(meleeUnit, PlayerType.Enemy);
+                    moveAction = new MoveAction(nearestEnemy.Position, true, false);
+                    attackAction = new AttackAction(nearestEnemy.Id, null);
+                }
+                else
+                {
+                    moveAction = new MoveAction(meleeUnit.Position, true, false);
+                    attackAction = new AttackAction(null, null);
+                }
 
-                var action = new EntityAction(moveAction, null, attackAction, null);
+                action = new EntityAction(moveAction, null, attackAction, null);
 
                 actions.Add(meleeUnit.Id, action);
             }
@@ -258,51 +295,6 @@ namespace Aicup2020
 
                 actions.Add(turretUnit.Id, action);
             }
-        }
-
-        private EntityType GetEntityToAttack()
-        {
-            if (Around.EnemyUnitsRanged.Any())
-            {
-                return EntityType.RangedUnit;
-            }
-
-            if (Around.EnemyUnitsMelees.Any())
-            {
-                return EntityType.MeleeUnit;
-            }
-
-            if (Around.EnemyUnitsTurrets.Any())
-            {
-                return EntityType.Turret;
-            }
-
-            if (Around.EnemyUnitsWorkers.Any())
-            {
-                return EntityType.BuilderUnit;
-            }
-
-            if (Around.EnemyBuildingsRanged.Any())
-            {
-                return EntityType.RangedBase;
-            }
-
-            if (Around.EnemyBuildingsMelees.Any())
-            {
-                return EntityType.MeleeBase;
-            }
-
-            if (Around.EnemyBuildingsWorkers.Any())
-            {
-                return EntityType.BuilderBase;
-            }
-
-            if (Around.EnemyBuildingsHouses.Any())
-            {
-                return EntityType.House;
-            }
-
-            return EntityType.Wall;
         }
 
         public void DebugUpdate(PlayerView playerView, DebugInterface debugInterface)

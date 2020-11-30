@@ -11,14 +11,13 @@ namespace Aicup2020
 {
     public class World
     {
+        public BehaviorType Behavior { get; private set; }
         public int PopulationProvide { get; private set; }
         public int PopulationUse { get; private set; }
         public int PopulationFree => PopulationProvide - PopulationUse;
-        public bool NeedBuildHouse => PopulationFree <= 1;
-        public bool CanBuildHouse => Me.Resource >= HouseBuildingCost;
-
-        public bool NeedRepairBuildings => MyBuildingsBroken.Any();
-        public bool NeedRepairHouses => MyBuildingsBroken.Any(bb => bb.EntityType == EntityType.House);
+        public bool NeedBuildHouse => PopulationFree <= 1 && Me.Resource >= HouseBuildingCost;
+        public bool NeedBuildBuildingWorkers => !MyBuildingsWorkers.Any() && Me.Resource >= WorkersBuildingCost;
+        public bool NeedBuildBuildingRanged => !MyBuildingsRanged.Any() && Me.Resource >= RangedBuildingCost;
 
         #region Costs
 
@@ -64,6 +63,7 @@ namespace Aicup2020
         public IEnumerable<Entity> MyEntities { get; private set; }
         public IEnumerable<Entity> MyBuildings => MyBuildingsRanged.Union(MyBuildingsMelees).Union(MyBuildingsWorkers).Union(MyBuildingsHouses).Union(MyBuildingsWalls).ToList();
         public IEnumerable<Entity> MyBuildingsBroken { get; private set; }
+        public IEnumerable<Entity> MyUnitsBroken { get; private set; }
         public IEnumerable<Entity> MyBuildingsWalls => MyEntities.Where(e => e.EntityType == EntityType.Wall).ToArray();
         public IEnumerable<Entity> MyBuildingsHouses => MyEntities.Where(e => e.EntityType == EntityType.House).ToArray();
         public IEnumerable<Entity> MyBuildingsWorkers => MyEntities.Where(e => e.EntityType == EntityType.BuilderBase).ToArray();
@@ -79,22 +79,23 @@ namespace Aicup2020
 
         public void Scan(PlayerView view)
         {
-            WorkerUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderUnit).Value.Cost;
-            RangedUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.RangedUnit).Value.Cost;
             HouseBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.House).Value.Cost;
-            MeleeUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.MeleeUnit).Value.Cost;
-            TurretUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.Turret).Value.Cost;
             WorkersBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderBase).Value.Cost;
             RangedBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.RangedBase).Value.Cost;
             MeleeBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.MeleeBase).Value.Cost;
             WallBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.Wall).Value.Cost;
+            WorkerUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderUnit).Value.Cost;
+            RangedUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.RangedUnit).Value.Cost;
+            MeleeUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.MeleeUnit).Value.Cost;
+            TurretUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.Turret).Value.Cost;
 
             Me = view.Players.Single(p => p.Id == view.MyId);
             EnemyPlayers = view.Players.Where(p => p.Id != view.MyId).ToArray();
             SpiceMilange = view.Entities.Where(e => e.EntityType == EntityType.Resource).ToArray();
             EnemyEntities = view.Entities.Where(e => e.PlayerId != view.MyId && e.EntityType != EntityType.Resource).ToArray();
             MyEntities = view.Entities.Where(e => e.PlayerId == view.MyId).ToArray();
-            MyBuildingsBroken = MyBuildings.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth).Union(MyUnitsTurrets.Where(t=>t.Health < view.EntityProperties.Single(ep => ep.Key == t.EntityType).Value.MaxHealth));
+            MyBuildingsBroken = MyBuildings.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth).Union(MyUnitsTurrets.Where(t => t.Health < view.EntityProperties.Single(ep => ep.Key == t.EntityType).Value.MaxHealth));
+            MyUnitsBroken = MyUnits.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth);
 
             PopulationProvide = 0;
             PopulationUse = 0;
@@ -117,6 +118,13 @@ namespace Aicup2020
                     }
                 }
             }
+        }
+
+        public void ChooseBehavior()
+        {
+            Behavior = MyEntities.Any(e => GetDistance(GetNearestEntity(e, PlayerType.Enemy).Position, e.Position) < 20) && EnemyEntities.Any()
+                           ? BehaviorType.Aggressive
+                           : BehaviorType.Passive;
         }
 
         public Entity GetNearestEntityOfType(Entity sourceEntity, PlayerType playerType, EntityType type)
