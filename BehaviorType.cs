@@ -1,4 +1,4 @@
-﻿namespace Aicup2020.Model
+﻿namespace Aicup2020
 {
     public enum BehaviorType
     {
