@@ -122,7 +122,7 @@ namespace Aicup2020
 
         public void ChooseBehavior()
         {
-            Behavior = MyEntities.Any(e => GetDistance(GetNearestEntity(e, PlayerType.Enemy).Position, e.Position) < 20) && EnemyEntities.Any()
+            Behavior = EnemyEntities.Any() && MyEntities.Any(e => GetDistance(GetNearestEntity(e, PlayerType.Enemy).Position, e.Position) < 20)
                            ? BehaviorType.Aggressive
                            : BehaviorType.Passive;
         }
