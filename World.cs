@@ -109,12 +109,27 @@ namespace Aicup2020
             foreach (var entity in view.Entities)
             {
                 var size = view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.Size;
-                for (var x = 0; x < size; x++)
+
+                if (MyBuildings.Contains(entity))
                 {
-                    for (var y = 0; y < size; y++)
+                    for (var x = 0; x < size + 2; x++)
                     {
-                        NotFreeSpace.Add(new Vec2Int(entity.Position.X + x,
-                                                     entity.Position.Y + y));
+                        for (var y = 0; y < size + 2; y++)
+                        {
+                            NotFreeSpace.Add(new Vec2Int(entity.Position.X + x - 1,
+                                                         entity.Position.Y + y - 1));
+                        }
+                    }
+                }
+                else
+                {
+                    for (var x = 0; x < size; x++)
+                    {
+                        for (var y = 0; y < size; y++)
+                        {
+                            NotFreeSpace.Add(new Vec2Int(entity.Position.X + x,
+                                                         entity.Position.Y + y));
+                        }
                     }
                 }
             }
