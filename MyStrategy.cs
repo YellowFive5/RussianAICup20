@@ -139,7 +139,7 @@ namespace Aicup2020
                                                                          {
                                                                              var _x = w.Position.X + x;
                                                                              var _y = w.Position.Y + y + 1;
-                                                                             if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                                                                              {
                                                                                  _1.Add(new Vec2Int(_x, _y));
                                                                              }
@@ -153,7 +153,7 @@ namespace Aicup2020
                                                                          {
                                                                              var _x = w.Position.X + x + 1;
                                                                              var _y = w.Position.Y + y;
-                                                                             if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                                                                              {
                                                                                  _2.Add(new Vec2Int(_x, _y));
                                                                              }
@@ -167,7 +167,7 @@ namespace Aicup2020
                                                                          {
                                                                              var _x = w.Position.X + x + 1;
                                                                              var _y = w.Position.Y + y + 1 - buildingSize;
-                                                                             if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                                                                              {
                                                                                  _3.Add(new Vec2Int(_x, _y));
                                                                              }
@@ -181,7 +181,7 @@ namespace Aicup2020
                                                                          {
                                                                              var _x = w.Position.X + x;
                                                                              var _y = w.Position.Y + y - buildingSize;
-                                                                             if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                                                                              {
                                                                                  _4.Add(new Vec2Int(_x, _y));
                                                                              }
@@ -195,7 +195,7 @@ namespace Aicup2020
                                                                          {
                                                                              var _x = w.Position.X + x + 1 - buildingSize;
                                                                              var _y = w.Position.Y + y - buildingSize;
-                                                                             if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                                                                              {
                                                                                  _5.Add(new Vec2Int(_x, _y));
                                                                              }
@@ -209,7 +209,7 @@ namespace Aicup2020
                                                                          {
                                                                              var _x = w.Position.X + x - buildingSize;
                                                                              var _y = w.Position.Y + y + 1 - buildingSize;
-                                                                             if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                                                                              {
                                                                                  _6.Add(new Vec2Int(_x, _y));
                                                                              }
@@ -223,7 +223,7 @@ namespace Aicup2020
                                                                          {
                                                                              var _x = w.Position.X + x - buildingSize;
                                                                              var _y = w.Position.Y + y;
-                                                                             if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                                                                              {
                                                                                  _7.Add(new Vec2Int(_x, _y));
                                                                              }
@@ -237,7 +237,7 @@ namespace Aicup2020
                                                                          {
                                                                              var _x = w.Position.X + x + 1 - buildingSize;
                                                                              var _y = w.Position.Y + y + 1;
-                                                                             if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                                                                              {
                                                                                  _8.Add(new Vec2Int(_x, _y));
                                                                              }
@@ -275,7 +275,7 @@ namespace Aicup2020
                 {
                     var _x = workerWhoCanBuild.Position.X + x;
                     var _y = workerWhoCanBuild.Position.Y + y + 1;
-                    if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                     {
                         _1.Add(new Vec2Int(_x, _y));
                     }
@@ -289,7 +289,7 @@ namespace Aicup2020
                 {
                     var _x = workerWhoCanBuild.Position.X + x + 1;
                     var _y = workerWhoCanBuild.Position.Y + y;
-                    if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                     {
                         _2.Add(new Vec2Int(_x, _y));
                     }
@@ -303,7 +303,7 @@ namespace Aicup2020
                 {
                     var _x = workerWhoCanBuild.Position.X + x + 1;
                     var _y = workerWhoCanBuild.Position.Y + y + 1 - buildingSize;
-                    if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                     {
                         _3.Add(new Vec2Int(_x, _y));
                     }
@@ -317,7 +317,7 @@ namespace Aicup2020
                 {
                     var _x = workerWhoCanBuild.Position.X + x;
                     var _y = workerWhoCanBuild.Position.Y + y - buildingSize;
-                    if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                     {
                         _4.Add(new Vec2Int(_x, _y));
                     }
@@ -331,7 +331,7 @@ namespace Aicup2020
                 {
                     var _x = workerWhoCanBuild.Position.X + x + 1 - buildingSize;
                     var _y = workerWhoCanBuild.Position.Y + y - buildingSize;
-                    if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                     {
                         _5.Add(new Vec2Int(_x, _y));
                     }
@@ -345,7 +345,7 @@ namespace Aicup2020
                 {
                     var _x = workerWhoCanBuild.Position.X + x - buildingSize;
                     var _y = workerWhoCanBuild.Position.Y + y + 1 - buildingSize;
-                    if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                     {
                         _6.Add(new Vec2Int(_x, _y));
                     }
@@ -359,7 +359,7 @@ namespace Aicup2020
                 {
                     var _x = workerWhoCanBuild.Position.X + x - buildingSize;
                     var _y = workerWhoCanBuild.Position.Y + y;
-                    if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                     {
                         _7.Add(new Vec2Int(_x, _y));
                     }
@@ -373,7 +373,7 @@ namespace Aicup2020
                 {
                     var _x = workerWhoCanBuild.Position.X + x + 1 - buildingSize;
                     var _y = workerWhoCanBuild.Position.Y + y + 1;
-                    if (_x >= 0 && _y >= 0 || _x < 80 && _y < 80)
+                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
                     {
                         _8.Add(new Vec2Int(_x, _y));
                     }

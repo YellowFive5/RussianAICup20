@@ -116,8 +116,13 @@ namespace Aicup2020
                     {
                         for (var y = 0; y < size + 2; y++)
                         {
-                            NotFreeSpace.Add(new Vec2Int(entity.Position.X + x - 1,
-                                                         entity.Position.Y + y - 1));
+                            var _x = entity.Position.X + x - 1;
+                            var _y = entity.Position.Y + y - 1;
+
+                            if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
+                            {
+                                NotFreeSpace.Add(new Vec2Int(_x, _y));
+                            }
                         }
                     }
                 }
