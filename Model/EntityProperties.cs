@@ -15,14 +15,14 @@ namespace Aicup2020.Model
         public int PopulationProvide { get; set; }
         public int PopulationUse { get; set; }
         public int MaxHealth { get; set; }
-        public int Cost { get; set; }
+        public int InitialCost { get; set; }
         public int SightRange { get; set; }
         public int ResourcePerHealth { get; set; }
         public BuildProperties? Build { get; set; }
         public AttackProperties? Attack { get; set; }
         public RepairProperties? Repair { get; set; }
 
-        public EntityProperties(int size, int buildScore, int destroyScore, bool canMove, int populationProvide, int populationUse, int maxHealth, int cost, int sightRange, int resourcePerHealth, BuildProperties? build, AttackProperties? attack, RepairProperties? repair)
+        public EntityProperties(int size, int buildScore, int destroyScore, bool canMove, int populationProvide, int populationUse, int maxHealth, int initialCost, int sightRange, int resourcePerHealth, BuildProperties? build, AttackProperties? attack, RepairProperties? repair)
         {
             Size = size;
             BuildScore = buildScore;
@@ -31,7 +31,7 @@ namespace Aicup2020.Model
             PopulationProvide = populationProvide;
             PopulationUse = populationUse;
             MaxHealth = maxHealth;
-            Cost = cost;
+            InitialCost = initialCost;
             SightRange = sightRange;
             ResourcePerHealth = resourcePerHealth;
             Build = build;
@@ -49,7 +49,7 @@ namespace Aicup2020.Model
             result.PopulationProvide = reader.ReadInt32();
             result.PopulationUse = reader.ReadInt32();
             result.MaxHealth = reader.ReadInt32();
-            result.Cost = reader.ReadInt32();
+            result.InitialCost = reader.ReadInt32();
             result.SightRange = reader.ReadInt32();
             result.ResourcePerHealth = reader.ReadInt32();
             if (reader.ReadBoolean())
@@ -91,7 +91,7 @@ namespace Aicup2020.Model
             writer.Write(PopulationProvide);
             writer.Write(PopulationUse);
             writer.Write(MaxHealth);
-            writer.Write(Cost);
+            writer.Write(InitialCost);
             writer.Write(SightRange);
             writer.Write(ResourcePerHealth);
             if (!Build.HasValue)

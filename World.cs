@@ -12,12 +12,27 @@ namespace Aicup2020
     public class World
     {
         public BehaviorType Behavior { get; private set; }
+
+        public readonly double[] aggressiveBehaviorUnitsRatio = {0.2, 0.8, 0.0};
+        public readonly double[] passiveBehaviorUnitsRatio = {0.8, 0.2, 0.0};
+        public double[] unitsRatio;
         public int PopulationProvide { get; private set; }
         public int PopulationUse { get; private set; }
         public int PopulationFree => PopulationProvide - PopulationUse;
-        public bool NeedBuildHouse => PopulationFree <= 1 && Me.Resource >= HouseBuildingCost;
-        public bool NeedBuildBuildingWorkers => !MyBuildingsWorkers.Any() && Me.Resource >= WorkersBuildingCost;
-        public bool NeedBuildBuildingRanged => !MyBuildingsRanged.Any() && Me.Resource >= RangedBuildingCost;
+
+        public bool NeedBuildBuildingWorkers => !MyBuildingsWorkers.Any() &&
+                                                Me.Resource >= WorkersBuildingCost;
+
+        public bool NeedBuildBuildingRanged => !MyBuildingsRanged.Any() &&
+                                               Me.Resource >= RangedBuildingCost &&
+                                               !NeedBuildBuildingWorkers;
+
+        public bool NeedBuildHouse => PopulationFree <= 1 &&
+                                      Me.Resource >= HouseBuildingCost &&
+                                      !NeedBuildBuildingWorkers &&
+                                      !NeedBuildBuildingRanged;
+
+        public bool RepairNeeds => MyBuildingsBroken.Any();
 
         #region Costs
 
@@ -34,6 +49,7 @@ namespace Aicup2020
         #endregion
 
         public IEnumerable<Entity> SpiceMilange { get; private set; }
+        public List<Entity> BusySpiceMilange { get; private set; }
 
         public List<Vec2Int> NotFreeSpace { get; private set; }
 
@@ -79,23 +95,25 @@ namespace Aicup2020
 
         public void Scan(PlayerView view)
         {
-            HouseBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.House).Value.Cost;
-            WorkersBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderBase).Value.Cost;
-            RangedBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.RangedBase).Value.Cost;
-            MeleeBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.MeleeBase).Value.Cost;
-            WallBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.Wall).Value.Cost;
-            WorkerUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderUnit).Value.Cost;
-            RangedUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.RangedUnit).Value.Cost;
-            MeleeUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.MeleeUnit).Value.Cost;
-            TurretUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.Turret).Value.Cost;
-
             Me = view.Players.Single(p => p.Id == view.MyId);
             EnemyPlayers = view.Players.Where(p => p.Id != view.MyId).ToArray();
             SpiceMilange = view.Entities.Where(e => e.EntityType == EntityType.Resource).ToArray();
+            BusySpiceMilange = new List<Entity>();
             EnemyEntities = view.Entities.Where(e => e.PlayerId != view.MyId && e.EntityType != EntityType.Resource).ToArray();
             MyEntities = view.Entities.Where(e => e.PlayerId == view.MyId).ToArray();
             MyBuildingsBroken = MyBuildings.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth).Union(MyUnitsTurrets.Where(t => t.Health < view.EntityProperties.Single(ep => ep.Key == t.EntityType).Value.MaxHealth));
             MyUnitsBroken = MyUnits.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth);
+
+            // todo delete -1 in another round
+            HouseBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.House).Value.InitialCost + MyBuildingsHouses.Count();
+            WorkersBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderBase).Value.InitialCost + MyBuildingsWorkers.Count() - 1;
+            RangedBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.RangedBase).Value.InitialCost + MyBuildingsRanged.Count() - 1;
+            MeleeBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.MeleeBase).Value.InitialCost + MyBuildingsMelees.Count() - 1;
+            WallBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.Wall).Value.InitialCost + MyBuildingsWalls.Count();
+            WorkerUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderUnit).Value.InitialCost + MyUnitsWorkers.Count() - 1;
+            RangedUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.RangedUnit).Value.InitialCost + MyUnitsRanged.Count() - 1;
+            MeleeUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.MeleeUnit).Value.InitialCost + MyUnitsMelees.Count() - 1;
+            TurretUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.Turret).Value.InitialCost + MyUnitsTurrets.Count() - 1;
 
             PopulationProvide = 0;
             PopulationUse = 0;
@@ -118,11 +136,7 @@ namespace Aicup2020
                         {
                             var _x = entity.Position.X + x - 1;
                             var _y = entity.Position.Y + y - 1;
-
-                            if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                            {
-                                NotFreeSpace.Add(new Vec2Int(_x, _y));
-                            }
+                            NotFreeSpace.CoordinatesCheckAndSave(_x, _y);
                         }
                     }
                 }
@@ -138,13 +152,23 @@ namespace Aicup2020
                     }
                 }
             }
+
+            ChooseBehavior();
         }
 
-        public void ChooseBehavior()
+        private void ChooseBehavior()
         {
-            Behavior = EnemyEntities.Any() && MyEntities.Any(e => GetDistance(GetNearestEntity(e, PlayerType.Enemy).Position, e.Position) < 20)
-                           ? BehaviorType.Aggressive
-                           : BehaviorType.Passive;
+            if (EnemyEntities.Any() &&
+                MyEntities.Any(e => GetDistance(GetNearestEntity(e, PlayerType.Enemy).Position, e.Position) < 20))
+            {
+                Behavior = BehaviorType.Aggressive;
+                unitsRatio = aggressiveBehaviorUnitsRatio;
+            }
+            else
+            {
+                Behavior = BehaviorType.Passive;
+                unitsRatio = passiveBehaviorUnitsRatio;
+            }
         }
 
         public Entity GetNearestEntityOfType(Entity sourceEntity, PlayerType playerType, EntityType type)
@@ -278,6 +302,27 @@ namespace Aicup2020
                 }
             }
 
+            return nearestEntity;
+        }
+
+        public Entity GetNearestNotBusySpice(Entity sourceEntity)
+        {
+            var targetCollection = SpiceMilange.Except(BusySpiceMilange);
+
+            double distanceBetween = 1000;
+            var nearestEntity = new Entity();
+
+            foreach (var ett in targetCollection) // todo to LINQ
+            {
+                var dst = GetDistance(ett.Position, sourceEntity.Position);
+                if (dst < distanceBetween)
+                {
+                    distanceBetween = dst;
+                    nearestEntity = ett;
+                }
+            }
+
+            BusySpiceMilange.Add(nearestEntity);
             return nearestEntity;
         }
 

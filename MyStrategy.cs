@@ -29,7 +29,6 @@ namespace Aicup2020
             Debug = debugInterface;
 
             Around.Scan(View);
-            Around.ChooseBehavior();
 
             CommandBuildingsWorkers();
             CommandBuildingsRange();
@@ -42,222 +41,134 @@ namespace Aicup2020
             return new Action(actions);
         }
 
+        #region Buildings
+
         private void CommandBuildingsWorkers()
         {
-            var workerUnitsCount = Around.Behavior == BehaviorType.Passive
-                                       ? (int) (Around.PopulationProvide * 0.8)
-                                       : (int) (Around.PopulationProvide * 0.2);
-
-            var lstX = new List<int> {-1, 5};
+            var workerUnitsCount = Around.PopulationProvide * Around.unitsRatio[0];
 
             foreach (var builderBuilding in Around.MyBuildingsWorkers)
             {
-                var positionToBuild = new Vec2Int(builderBuilding.Position.X + lstX.ElementAt(new Random().Next(lstX.Count)),
-                                                  builderBuilding.Position.Y + new Random().Next(0, 5));
-
                 var needBuildBuilders = Around.MyUnitsWorkers.Count() < workerUnitsCount
                                         && Around.Me.Resource >= Around.WorkerUnitCost;
 
                 actions.Add(builderBuilding.Id,
                             needBuildBuilders
-                                ? new EntityAction(null, new BuildAction(EntityType.BuilderUnit, positionToBuild), null, null)
+                                ? new EntityAction(null, new BuildAction(EntityType.BuilderUnit, GetPositionToBuildUnitAround(builderBuilding)), null, null)
                                 : new EntityAction(null, null, null, null));
             }
         }
 
         private void CommandBuildingsRange()
         {
-            var rangeUnitsCount = Around.Behavior == BehaviorType.Passive
-                                      ? (int) (Around.PopulationProvide * 0.2)
-                                      : (int) (Around.PopulationProvide * 0.8);
-
-            var lstX = new List<int> {-1, 5};
+            var rangeUnitsCount = Around.PopulationProvide * Around.unitsRatio[1];
 
             foreach (var rangeBuilding in Around.MyBuildingsRanged)
             {
-                var positionToBuild = new Vec2Int(rangeBuilding.Position.X + lstX.ElementAt(new Random().Next(lstX.Count)),
-                                                  rangeBuilding.Position.Y + new Random().Next(0, 5));
-
                 var needBuildRanged = Around.MyUnitsRanged.Count() < rangeUnitsCount
                                       && Around.Me.Resource >= Around.RangedUnitCost;
 
                 actions.Add(rangeBuilding.Id,
                             needBuildRanged
-                                ? new EntityAction(null, new BuildAction(EntityType.RangedUnit, positionToBuild), null, null)
+                                ? new EntityAction(null, new BuildAction(EntityType.RangedUnit, GetPositionToBuildUnitAround(rangeBuilding)), null, null)
                                 : new EntityAction(null, null, null, null));
             }
         }
 
+        private Vec2Int GetPositionToBuildUnitAround(Entity building)
+        {
+            var buildingSize = View.EntityProperties.Single(ep => ep.Key == building.EntityType).Value.Size;
+
+            var positionsToBuildAround5 = new List<int[]>
+                                          {
+                                              new[] {-1, -1},
+                                              new[] {0, -1},
+                                              new[] {1, -1},
+                                              new[] {2, -1},
+                                              new[] {3, -1},
+                                              new[] {4, -1},
+                                              new[] {5, -1},
+
+                                              new[] {-1, 0},
+                                              new[] {-1, 1},
+                                              new[] {-1, 2},
+                                              new[] {-1, 3},
+                                              new[] {-1, 4},
+                                              new[] {-1, 5},
+
+                                              new[] {0, 5},
+                                              new[] {1, 5},
+                                              new[] {2, 5},
+                                              new[] {3, 5},
+                                              new[] {4, 5},
+                                              new[] {5, 5},
+
+                                              new[] {5, 4},
+                                              new[] {5, 3},
+                                              new[] {5, 2},
+                                              new[] {5, 1},
+                                              new[] {5, 0}
+                                          };
+
+            var rndPositionToBuild = positionsToBuildAround5.ElementAt(new Random().Next(positionsToBuildAround5.Count));
+
+            var positionToBuild = new Vec2Int(building.Position.X + rndPositionToBuild.ElementAt(0),
+                                              building.Position.Y + rndPositionToBuild.ElementAt(1));
+            return Around.MyUnits.Any(my => my.Position.X == positionToBuild.X &&
+                                            my.Position.Y == positionToBuild.Y)
+                       ? GetPositionToBuildUnitAround(building)
+                       : positionToBuild;
+        }
+
+        #endregion
+
+        #region Units
+
         private void CommandUnitsWorkers()
         {
-            foreach (var builderUnit in Around.MyUnitsWorkers) // Go get spice milange
+            foreach (var builderUnit in Around.MyUnitsWorkers) // All goes get spice milange because SPICE MUST FLOW
             {
-                var nearestSpice = Around.GetNearestEntityOfType(builderUnit, PlayerType.My, EntityType.Resource);
+                var nearestNotBusySpice = Around.GetNearestNotBusySpice(builderUnit);
 
-                var moveAction = new MoveAction(nearestSpice.Position, true, false);
-                var attackAction = new AttackAction(nearestSpice.Id, null);
+                var moveAction = new MoveAction(nearestNotBusySpice.Position, true, false);
+                var attackAction = new AttackAction(nearestNotBusySpice.Id, null);
+
                 var action = new EntityAction(moveAction, null, attackAction, null);
 
                 actions.Add(builderUnit.Id, action);
             }
 
-            if (Around.NeedBuildHouse)
+            if (Around.RepairNeeds)
             {
-                SendNearestWorkerToBuild(EntityType.House);
-            }
+                foreach (var brokenBuilding in Around.MyBuildingsBroken)
+                {
+                    var nearestBuilder = Around.GetNearestEntityOfType(brokenBuilding, PlayerType.My, EntityType.BuilderUnit);
+                    actions.Remove(nearestBuilder.Id);
 
-            foreach (var brokenBuilding in Around.MyBuildingsBroken) // Repair needs
-            {
-                var nearestBuilder = Around.GetNearestEntityOfType(brokenBuilding, PlayerType.My, EntityType.BuilderUnit);
-                actions.Remove(nearestBuilder.Id);
-
-                var moveAction = new MoveAction(brokenBuilding.Position, true, false);
-                var repairAction = new RepairAction(brokenBuilding.Id);
-                actions.Add(nearestBuilder.Id, new EntityAction(moveAction, null, null, repairAction));
-            }
-
-            if (Around.NeedBuildBuildingRanged)
-            {
-                SendNearestWorkerToBuild(EntityType.RangedBase);
+                    var moveAction = new MoveAction(brokenBuilding.Position, true, false);
+                    var repairAction = new RepairAction(brokenBuilding.Id);
+                    actions.Add(nearestBuilder.Id, new EntityAction(moveAction, null, null, repairAction));
+                }
             }
 
             if (Around.NeedBuildBuildingWorkers)
             {
                 SendNearestWorkerToBuild(EntityType.BuilderBase);
             }
+            else if (Around.NeedBuildBuildingRanged)
+            {
+                SendNearestWorkerToBuild(EntityType.RangedBase);
+            }
+            else if (Around.NeedBuildHouse)
+            {
+                SendNearestWorkerToBuild(EntityType.House);
+            }
         }
 
         private void SendNearestWorkerToBuild(EntityType type)
         {
             var buildingSize = View.EntityProperties.Single(ep => ep.Key == type).Value.Size;
-            var workersWhoCanBuild = Around.MyUnitsWorkers.Where(w => // Find worker who can build right now and here
-                                                                 {
-                                                                     var _1 = new List<Vec2Int>();
-                                                                     for (var x = 0; x < buildingSize; x++)
-                                                                     {
-                                                                         for (var y = 0; y < buildingSize; y++)
-                                                                         {
-                                                                             var _x = w.Position.X + x;
-                                                                             var _y = w.Position.Y + y + 1;
-                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                                                                             {
-                                                                                 _1.Add(new Vec2Int(_x, _y));
-                                                                             }
-                                                                         }
-                                                                     }
-
-                                                                     var _2 = new List<Vec2Int>();
-                                                                     for (var x = 0; x < buildingSize; x++)
-                                                                     {
-                                                                         for (var y = 0; y < buildingSize; y++)
-                                                                         {
-                                                                             var _x = w.Position.X + x + 1;
-                                                                             var _y = w.Position.Y + y;
-                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                                                                             {
-                                                                                 _2.Add(new Vec2Int(_x, _y));
-                                                                             }
-                                                                         }
-                                                                     }
-
-                                                                     var _3 = new List<Vec2Int>();
-                                                                     for (var x = 0; x < buildingSize; x++)
-                                                                     {
-                                                                         for (var y = 0; y < buildingSize; y++)
-                                                                         {
-                                                                             var _x = w.Position.X + x + 1;
-                                                                             var _y = w.Position.Y + y + 1 - buildingSize;
-                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                                                                             {
-                                                                                 _3.Add(new Vec2Int(_x, _y));
-                                                                             }
-                                                                         }
-                                                                     }
-
-                                                                     var _4 = new List<Vec2Int>();
-                                                                     for (var x = 0; x < buildingSize; x++)
-                                                                     {
-                                                                         for (var y = 0; y < buildingSize; y++)
-                                                                         {
-                                                                             var _x = w.Position.X + x;
-                                                                             var _y = w.Position.Y + y - buildingSize;
-                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                                                                             {
-                                                                                 _4.Add(new Vec2Int(_x, _y));
-                                                                             }
-                                                                         }
-                                                                     }
-
-                                                                     var _5 = new List<Vec2Int>();
-                                                                     for (var x = 0; x < buildingSize; x++)
-                                                                     {
-                                                                         for (var y = 0; y < buildingSize; y++)
-                                                                         {
-                                                                             var _x = w.Position.X + x + 1 - buildingSize;
-                                                                             var _y = w.Position.Y + y - buildingSize;
-                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                                                                             {
-                                                                                 _5.Add(new Vec2Int(_x, _y));
-                                                                             }
-                                                                         }
-                                                                     }
-
-                                                                     var _6 = new List<Vec2Int>();
-                                                                     for (var x = 0; x < buildingSize; x++)
-                                                                     {
-                                                                         for (var y = 0; y < buildingSize; y++)
-                                                                         {
-                                                                             var _x = w.Position.X + x - buildingSize;
-                                                                             var _y = w.Position.Y + y + 1 - buildingSize;
-                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                                                                             {
-                                                                                 _6.Add(new Vec2Int(_x, _y));
-                                                                             }
-                                                                         }
-                                                                     }
-
-                                                                     var _7 = new List<Vec2Int>();
-                                                                     for (var x = 0; x < buildingSize; x++)
-                                                                     {
-                                                                         for (var y = 0; y < buildingSize; y++)
-                                                                         {
-                                                                             var _x = w.Position.X + x - buildingSize;
-                                                                             var _y = w.Position.Y + y;
-                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                                                                             {
-                                                                                 _7.Add(new Vec2Int(_x, _y));
-                                                                             }
-                                                                         }
-                                                                     }
-
-                                                                     var _8 = new List<Vec2Int>();
-                                                                     for (var x = 0; x < buildingSize; x++)
-                                                                     {
-                                                                         for (var y = 0; y < buildingSize; y++)
-                                                                         {
-                                                                             var _x = w.Position.X + x + 1 - buildingSize;
-                                                                             var _y = w.Position.Y + y + 1;
-                                                                             if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                                                                             {
-                                                                                 _8.Add(new Vec2Int(_x, _y));
-                                                                             }
-                                                                         }
-                                                                     }
-
-                                                                     var points = new List<List<Vec2Int>>
-                                                                                  {
-                                                                                      _1,
-                                                                                      _2,
-                                                                                      _3,
-                                                                                      _4,
-                                                                                      _5,
-                                                                                      _6,
-                                                                                      _7,
-                                                                                      _8,
-                                                                                  };
-
-                                                                     return points.Any(l => l.Count == buildingSize * buildingSize && !l.Any(s => Around.NotFreeSpace.Any(np => np.X == s.X && np.Y == s.Y)));
-                                                                 }).Take(1).ToList();
+            var workersWhoCanBuild = Around.MyUnitsWorkers.Where(w => w.GetMappingAround(buildingSize).HasPlaceToBuildAround(Around, buildingSize)).ToList();
 
             if (!workersWhoCanBuild.Any())
             {
@@ -266,158 +177,12 @@ namespace Aicup2020
 
             var workerWhoCanBuild = workersWhoCanBuild.First();
 
-            var pointToBuild = new Vec2Int();
+            var mappingAround = workerWhoCanBuild.GetMappingAround(buildingSize);
 
-            var _1 = new List<Vec2Int>();
-            for (var x = 0; x < buildingSize; x++)
-            {
-                for (var y = 0; y < buildingSize; y++)
-                {
-                    var _x = workerWhoCanBuild.Position.X + x;
-                    var _y = workerWhoCanBuild.Position.Y + y + 1;
-                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                    {
-                        _1.Add(new Vec2Int(_x, _y));
-                    }
-                }
-            }
+            var pointToBuild = mappingAround.GetFirstPlaceToBuild(workerWhoCanBuild, Around, buildingSize);
 
-            var _2 = new List<Vec2Int>();
-            for (var x = 0; x < buildingSize; x++)
-            {
-                for (var y = 0; y < buildingSize; y++)
-                {
-                    var _x = workerWhoCanBuild.Position.X + x + 1;
-                    var _y = workerWhoCanBuild.Position.Y + y;
-                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                    {
-                        _2.Add(new Vec2Int(_x, _y));
-                    }
-                }
-            }
-
-            var _3 = new List<Vec2Int>();
-            for (var x = 0; x < buildingSize; x++)
-            {
-                for (var y = 0; y < buildingSize; y++)
-                {
-                    var _x = workerWhoCanBuild.Position.X + x + 1;
-                    var _y = workerWhoCanBuild.Position.Y + y + 1 - buildingSize;
-                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                    {
-                        _3.Add(new Vec2Int(_x, _y));
-                    }
-                }
-            }
-
-            var _4 = new List<Vec2Int>();
-            for (var x = 0; x < buildingSize; x++)
-            {
-                for (var y = 0; y < buildingSize; y++)
-                {
-                    var _x = workerWhoCanBuild.Position.X + x;
-                    var _y = workerWhoCanBuild.Position.Y + y - buildingSize;
-                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                    {
-                        _4.Add(new Vec2Int(_x, _y));
-                    }
-                }
-            }
-
-            var _5 = new List<Vec2Int>();
-            for (var x = 0; x < buildingSize; x++)
-            {
-                for (var y = 0; y < buildingSize; y++)
-                {
-                    var _x = workerWhoCanBuild.Position.X + x + 1 - buildingSize;
-                    var _y = workerWhoCanBuild.Position.Y + y - buildingSize;
-                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                    {
-                        _5.Add(new Vec2Int(_x, _y));
-                    }
-                }
-            }
-
-            var _6 = new List<Vec2Int>();
-            for (var x = 0; x < buildingSize; x++)
-            {
-                for (var y = 0; y < buildingSize; y++)
-                {
-                    var _x = workerWhoCanBuild.Position.X + x - buildingSize;
-                    var _y = workerWhoCanBuild.Position.Y + y + 1 - buildingSize;
-                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                    {
-                        _6.Add(new Vec2Int(_x, _y));
-                    }
-                }
-            }
-
-            var _7 = new List<Vec2Int>();
-            for (var x = 0; x < buildingSize; x++)
-            {
-                for (var y = 0; y < buildingSize; y++)
-                {
-                    var _x = workerWhoCanBuild.Position.X + x - buildingSize;
-                    var _y = workerWhoCanBuild.Position.Y + y;
-                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                    {
-                        _7.Add(new Vec2Int(_x, _y));
-                    }
-                }
-            }
-
-            var _8 = new List<Vec2Int>();
-            for (var x = 0; x < buildingSize; x++)
-            {
-                for (var y = 0; y < buildingSize; y++)
-                {
-                    var _x = workerWhoCanBuild.Position.X + x + 1 - buildingSize;
-                    var _y = workerWhoCanBuild.Position.Y + y + 1;
-                    if (_x >= 0 && _y >= 0 && _x < 80 && _y < 80)
-                    {
-                        _8.Add(new Vec2Int(_x, _y));
-                    }
-                }
-            }
-
-            if (_1.Count.Equals(buildingSize * buildingSize) && !_1.Any(s => Around.NotFreeSpace.Any(np => np.X == s.X && np.Y == s.Y)))
-            {
-                pointToBuild = new Vec2Int(workerWhoCanBuild.Position.X, workerWhoCanBuild.Position.Y + 1);
-            }
-            else if (_2.Count.Equals(buildingSize * buildingSize) && !_2.Any(s => Around.NotFreeSpace.Any(np => np.X == s.X && np.Y == s.Y)))
-            {
-                pointToBuild = new Vec2Int(workerWhoCanBuild.Position.X + 1, workerWhoCanBuild.Position.Y);
-            }
-            else if (_3.Count.Equals(buildingSize * buildingSize) && !_3.Any(s => Around.NotFreeSpace.Any(np => np.X == s.X && np.Y == s.Y)))
-            {
-                pointToBuild = new Vec2Int(workerWhoCanBuild.Position.X + 1, workerWhoCanBuild.Position.Y + 1 - buildingSize);
-            }
-            else if (_4.Count.Equals(buildingSize * buildingSize) && !_4.Any(s => Around.NotFreeSpace.Any(np => np.X == s.X && np.Y == s.Y)))
-            {
-                pointToBuild = new Vec2Int(workerWhoCanBuild.Position.X, workerWhoCanBuild.Position.Y - buildingSize);
-            }
-            else if (_5.Count.Equals(buildingSize * buildingSize) && !_5.Any(s => Around.NotFreeSpace.Any(np => np.X == s.X && np.Y == s.Y)))
-            {
-                pointToBuild = new Vec2Int(workerWhoCanBuild.Position.X + 1 - buildingSize, workerWhoCanBuild.Position.Y - buildingSize);
-            }
-            else if (_6.Count.Equals(buildingSize * buildingSize) && !_6.Any(s => Around.NotFreeSpace.Any(np => np.X == s.X && np.Y == s.Y)))
-            {
-                pointToBuild = new Vec2Int(workerWhoCanBuild.Position.X - buildingSize, workerWhoCanBuild.Position.Y - buildingSize + 1);
-            }
-            else if (_7.Count.Equals(buildingSize * buildingSize) && !_7.Any(s => Around.NotFreeSpace.Any(np => np.X == s.X && np.Y == s.Y)))
-            {
-                pointToBuild = new Vec2Int(workerWhoCanBuild.Position.X - buildingSize, workerWhoCanBuild.Position.Y);
-            }
-            else if (_8.Count.Equals(buildingSize * buildingSize) && !_8.Any(s => Around.NotFreeSpace.Any(np => np.X == s.X && np.Y == s.Y)))
-            {
-                pointToBuild = new Vec2Int(workerWhoCanBuild.Position.X + 1 - buildingSize, workerWhoCanBuild.Position.Y + 1);
-            }
-
-            if (pointToBuild.X >= 0 && pointToBuild.Y >= 0 && pointToBuild.X < 80 && pointToBuild.Y < 80)
-            {
-                actions.Remove(workerWhoCanBuild.Id);
-                actions.Add(workerWhoCanBuild.Id, new EntityAction(null, new BuildAction(type, pointToBuild), null, null));
-            }
+            actions.Remove(workerWhoCanBuild.Id);
+            actions.Add(workerWhoCanBuild.Id, new EntityAction(null, new BuildAction(type, pointToBuild), null, null));
         }
 
         private void CommandUnitsRanged()
@@ -483,6 +248,8 @@ namespace Aicup2020
                 actions.Add(turretUnit.Id, action);
             }
         }
+
+        #endregion
 
         public void DebugUpdate(PlayerView playerView, DebugInterface debugInterface)
         {
