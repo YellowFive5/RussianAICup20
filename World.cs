@@ -12,6 +12,7 @@ namespace Aicup2020
     public class World
     {
         public BehaviorType Behavior { get; private set; }
+        public Vec2Int SquareOfMyInterests { get; private set; }
 
         public readonly double[] aggressiveBehaviorUnitsRatio = {0.2, 0.8, 0.0};
         public readonly double[] passiveBehaviorUnitsRatio = {0.8, 0.2, 0.0};
@@ -48,10 +49,13 @@ namespace Aicup2020
 
         #endregion
 
+        public Vec2Int Zero;
         public IEnumerable<Entity> SpiceMilange { get; private set; }
         public List<Entity> BusySpiceMilange { get; private set; }
 
-        public List<Vec2Int> NotFreeSpace { get; private set; }
+        // public List<Vec2Int> Points { get; }
+
+        public List<Vec2Int> NotFreePoints { get; private set; }
 
         #region Enemy
 
@@ -77,7 +81,7 @@ namespace Aicup2020
 
         public Player Me { get; private set; }
         public IEnumerable<Entity> MyEntities { get; private set; }
-        public IEnumerable<Entity> MyBuildings => MyBuildingsRanged.Union(MyBuildingsMelees).Union(MyBuildingsWorkers).Union(MyBuildingsHouses).Union(MyBuildingsWalls).ToList();
+        public IEnumerable<Entity> MyBuildings => MyBuildingsRanged.Union(MyBuildingsMelees).Union(MyBuildingsWorkers).Union(MyBuildingsHouses).Union(MyBuildingsWalls).Union(MyUnitsTurrets).ToList();
         public IEnumerable<Entity> MyBuildingsBroken { get; private set; }
         public IEnumerable<Entity> MyUnitsBroken { get; private set; }
         public IEnumerable<Entity> MyBuildingsWalls => MyEntities.Where(e => e.EntityType == EntityType.Wall).ToArray();
@@ -87,11 +91,27 @@ namespace Aicup2020
         public IEnumerable<Entity> MyBuildingsRanged => MyEntities.Where(e => e.EntityType == EntityType.RangedBase).ToArray();
         public IEnumerable<Entity> MyUnits => MyUnitsWorkers.Union(MyUnitsMelees).Union(MyUnitsRanged).Union(MyUnitsTurrets).ToList();
         public IEnumerable<Entity> MyUnitsTurrets => MyEntities.Where(e => e.EntityType == EntityType.Turret).ToArray();
+
         public IEnumerable<Entity> MyUnitsWorkers => MyEntities.Where(e => e.EntityType == EntityType.BuilderUnit).ToArray();
+
+        // public List<Entity> MyUnitsBusyWorkers { get; private set; }
         public IEnumerable<Entity> MyUnitsMelees => MyEntities.Where(e => e.EntityType == EntityType.MeleeUnit).ToArray();
         public IEnumerable<Entity> MyUnitsRanged => MyEntities.Where(e => e.EntityType == EntityType.RangedUnit).ToArray();
 
         #endregion
+
+        public World()
+        {
+            Zero = new Vec2Int(0,0);
+            // Points = new List<Vec2Int>();
+            // for (int x = 0; x < 80; x++)
+            // {
+            //     for (int y = 0; y < 80; y++)
+            //     {
+            //         Points.Add(new Vec2Int(x, y));
+            //     }
+            // }
+        }
 
         public void Scan(PlayerView view)
         {
@@ -101,8 +121,9 @@ namespace Aicup2020
             BusySpiceMilange = new List<Entity>();
             EnemyEntities = view.Entities.Where(e => e.PlayerId != view.MyId && e.EntityType != EntityType.Resource).ToArray();
             MyEntities = view.Entities.Where(e => e.PlayerId == view.MyId).ToArray();
-            MyBuildingsBroken = MyBuildings.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth).Union(MyUnitsTurrets.Where(t => t.Health < view.EntityProperties.Single(ep => ep.Key == t.EntityType).Value.MaxHealth));
+            MyBuildingsBroken = MyBuildings.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth);
             MyUnitsBroken = MyUnits.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth);
+            // MyUnitsBusyWorkers = new List<Entity>();
 
             // todo delete -1 in another round
             HouseBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.House).Value.InitialCost + MyBuildingsHouses.Count();
@@ -115,6 +136,9 @@ namespace Aicup2020
             MeleeUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.MeleeUnit).Value.InitialCost + MyUnitsMelees.Count() - 1;
             TurretUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.Turret).Value.InitialCost + MyUnitsTurrets.Count() - 1;
 
+            // SquareOfMyInterests = new Vec2Int(MyEntities.Max(e => e.Position.X) + 1,
+            //                                   MyEntities.Max(e => e.Position.Y) + 1);
+            SquareOfMyInterests = new Vec2Int(35, 35);
             PopulationProvide = 0;
             PopulationUse = 0;
             foreach (var entity in MyEntities)
@@ -123,7 +147,7 @@ namespace Aicup2020
                 PopulationUse += view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.PopulationUse;
             }
 
-            NotFreeSpace = new List<Vec2Int>();
+            NotFreePoints = new List<Vec2Int>();
             foreach (var entity in view.Entities)
             {
                 var size = view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.Size;
@@ -136,7 +160,7 @@ namespace Aicup2020
                         {
                             var _x = entity.Position.X + x - 1;
                             var _y = entity.Position.Y + y - 1;
-                            NotFreeSpace.CoordinatesCheckAndSave(_x, _y);
+                            NotFreePoints.CheckPointInsideAndSave(_x, _y);
                         }
                     }
                 }
@@ -146,8 +170,8 @@ namespace Aicup2020
                     {
                         for (var y = 0; y < size; y++)
                         {
-                            NotFreeSpace.Add(new Vec2Int(entity.Position.X + x,
-                                                         entity.Position.Y + y));
+                            NotFreePoints.Add(new Vec2Int(entity.Position.X + x,
+                                                          entity.Position.Y + y));
                         }
                     }
                 }
@@ -158,8 +182,10 @@ namespace Aicup2020
 
         private void ChooseBehavior()
         {
-            if (EnemyEntities.Any() &&
-                MyEntities.Any(e => GetDistance(GetNearestEntity(e, PlayerType.Enemy).Position, e.Position) < 20))
+            if (EnemyEntities.Any() && 
+                MyEntities.Any(e => GetDistance(GetNearestEntity(e.Position, PlayerType.Enemy).Position, e.Position) < 6))
+                // ||
+                // EnemyUnits.Any(eu => GetDistance(eu.Position, Zero) <= 35))
             {
                 Behavior = BehaviorType.Aggressive;
                 unitsRatio = aggressiveBehaviorUnitsRatio;
@@ -171,7 +197,7 @@ namespace Aicup2020
             }
         }
 
-        public Entity GetNearestEntityOfType(Entity sourceEntity, PlayerType playerType, EntityType type)
+        public Entity GetNearestEntityOfType(Vec2Int sourcePosition, PlayerType playerType, EntityType type, int position = 0)
         {
             IEnumerable<Entity> targetCollection;
 
@@ -262,7 +288,7 @@ namespace Aicup2020
 
             foreach (var ett in targetCollection) // todo to LINQ
             {
-                var dst = GetDistance(ett.Position, sourceEntity.Position);
+                var dst = GetDistance(ett.Position, sourcePosition);
                 if (dst < distanceBetween)
                 {
                     distanceBetween = dst;
@@ -273,7 +299,7 @@ namespace Aicup2020
             return nearestEntity;
         }
 
-        public Entity GetNearestEntity(Entity sourceEntity, PlayerType playerType)
+        public Entity GetNearestEntity(Vec2Int sourcePosition, PlayerType playerType)
         {
             IEnumerable<Entity> targetCollection;
 
@@ -294,7 +320,7 @@ namespace Aicup2020
 
             foreach (var ett in targetCollection) // todo to LINQ
             {
-                var dst = GetDistance(ett.Position, sourceEntity.Position);
+                var dst = GetDistance(ett.Position, sourcePosition);
                 if (dst < distanceBetween)
                 {
                     distanceBetween = dst;
@@ -302,10 +328,9 @@ namespace Aicup2020
                 }
             }
 
-            return nearestEntity;
-        }
+            return nearestEntity;        }
 
-        public Entity GetNearestNotBusySpice(Entity sourceEntity)
+        public Entity GetNearestNotBusySpice(Vec2Int sourcePosition)
         {
             var targetCollection = SpiceMilange.Except(BusySpiceMilange);
 
@@ -314,7 +339,7 @@ namespace Aicup2020
 
             foreach (var ett in targetCollection) // todo to LINQ
             {
-                var dst = GetDistance(ett.Position, sourceEntity.Position);
+                var dst = GetDistance(ett.Position, sourcePosition);
                 if (dst < distanceBetween)
                 {
                     distanceBetween = dst;
@@ -324,6 +349,18 @@ namespace Aicup2020
 
             BusySpiceMilange.Add(nearestEntity);
             return nearestEntity;
+        }
+
+        public Entity GetNearestWorker(Vec2Int sourcePosition)
+        {
+            var nearestBuilder = GetNearestEntityOfType(sourcePosition, PlayerType.My, EntityType.BuilderUnit);
+
+            // var nearestEntity = MyUnitsWorkers.Except(MyUnitsBusyWorkers)
+            //                                   .OrderBy(e => GetDistance(e.Position, sourcePosition))
+            //                                   .First();
+            //
+            // MyUnitsBusyWorkers.Add(nearestEntity);
+            return nearestBuilder;
         }
 
         private double GetDistance(Vec2Int one, Vec2Int two)
