@@ -50,8 +50,12 @@ namespace Aicup2020
 
         public IEnumerable<Entity> SpiceMilange { get; private set; }
         public List<Entity> BusySpiceMilange { get; private set; }
+        
+        public List<Vec2Int> Points { get; }
 
-        public List<Vec2Int> NotFreeSpace { get; private set; }
+        public List<Vec2Int> NotFreePoints { get; private set; }
+        public List<Vec2Int> FreePoints { get; private set; }
+
 
         #region Enemy
 
@@ -93,6 +97,17 @@ namespace Aicup2020
 
         #endregion
 
+        public World()
+        {
+            Points = new List<Vec2Int>();
+            for (int x = 0; x < 80; x++)
+            {
+                for (int y = 0; y < 80; y++)
+                {
+                    Points.Add(new Vec2Int(x, y));
+                }
+            }
+        }
         public void Scan(PlayerView view)
         {
             Me = view.Players.Single(p => p.Id == view.MyId);
@@ -105,11 +120,11 @@ namespace Aicup2020
             MyUnitsBroken = MyUnits.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth);
 
             // todo delete -1 in another round
-            HouseBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.House).Value.InitialCost + MyBuildingsHouses.Count();
-            WorkersBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderBase).Value.InitialCost + MyBuildingsWorkers.Count() - 1;
-            RangedBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.RangedBase).Value.InitialCost + MyBuildingsRanged.Count() - 1;
-            MeleeBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.MeleeBase).Value.InitialCost + MyBuildingsMelees.Count() - 1;
-            WallBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.Wall).Value.InitialCost + MyBuildingsWalls.Count();
+            HouseBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.House).Value.InitialCost;
+            WorkersBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderBase).Value.InitialCost;
+            RangedBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.RangedBase).Value.InitialCost;
+            MeleeBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.MeleeBase).Value.InitialCost;
+            WallBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.Wall).Value.InitialCost;
             WorkerUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.BuilderUnit).Value.InitialCost + MyUnitsWorkers.Count() - 1;
             RangedUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.RangedUnit).Value.InitialCost + MyUnitsRanged.Count() - 1;
             MeleeUnitCost = view.EntityProperties.Single(ep => ep.Key == EntityType.MeleeUnit).Value.InitialCost + MyUnitsMelees.Count() - 1;
@@ -123,7 +138,7 @@ namespace Aicup2020
                 PopulationUse += view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.PopulationUse;
             }
 
-            NotFreeSpace = new List<Vec2Int>();
+            NotFreePoints = new List<Vec2Int>();
             foreach (var entity in view.Entities)
             {
                 var size = view.EntityProperties.Single(ep => ep.Key == entity.EntityType).Value.Size;
@@ -136,7 +151,7 @@ namespace Aicup2020
                         {
                             var _x = entity.Position.X + x - 1;
                             var _y = entity.Position.Y + y - 1;
-                            NotFreeSpace.CoordinatesCheckAndSave(_x, _y);
+                            NotFreePoints.CheckPointInsideAndSave(_x, _y);
                         }
                     }
                 }
@@ -146,12 +161,14 @@ namespace Aicup2020
                     {
                         for (var y = 0; y < size; y++)
                         {
-                            NotFreeSpace.Add(new Vec2Int(entity.Position.X + x,
+                            NotFreePoints.Add(new Vec2Int(entity.Position.X + x,
                                                          entity.Position.Y + y));
                         }
                     }
                 }
             }
+            
+            // FreePoints = Points.Except(NotFreePoints).ToList();
 
             ChooseBehavior();
         }
@@ -171,7 +188,7 @@ namespace Aicup2020
             }
         }
 
-        public Entity GetNearestEntityOfType(Entity sourceEntity, PlayerType playerType, EntityType type)
+        public Entity GetNearestEntityOfType(Vec2Int sourcePoint, PlayerType playerType, EntityType type)
         {
             IEnumerable<Entity> targetCollection;
 
@@ -262,7 +279,7 @@ namespace Aicup2020
 
             foreach (var ett in targetCollection) // todo to LINQ
             {
-                var dst = GetDistance(ett.Position, sourceEntity.Position);
+                var dst = GetDistance(ett.Position, sourcePoint);
                 if (dst < distanceBetween)
                 {
                     distanceBetween = dst;

@@ -16,10 +16,80 @@ namespace Aicup2020
         private DebugInterface Debug { get; set; }
         private World Around { get; }
         private Dictionary<int, EntityAction> actions;
+        private readonly List<int[]> positionsToBuildAround5;
+        private readonly List<int[]> positionsToBuildAround3;
+        private readonly List<int[]> positionsToBuildAround2;
 
         public MyStrategy()
         {
             Around = new World();
+            positionsToBuildAround5 = new List<int[]>
+                                      {
+                                          new[] {-1, -1},
+                                          new[] {0, -1},
+                                          new[] {1, -1},
+                                          new[] {2, -1},
+                                          new[] {3, -1},
+                                          new[] {4, -1},
+                                          new[] {5, -1},
+
+                                          new[] {-1, 0},
+                                          new[] {-1, 1},
+                                          new[] {-1, 2},
+                                          new[] {-1, 3},
+                                          new[] {-1, 4},
+                                          new[] {-1, 5},
+
+                                          new[] {0, 5},
+                                          new[] {1, 5},
+                                          new[] {2, 5},
+                                          new[] {3, 5},
+                                          new[] {4, 5},
+                                          new[] {5, 5},
+
+                                          new[] {5, 4},
+                                          new[] {5, 3},
+                                          new[] {5, 2},
+                                          new[] {5, 1},
+                                          new[] {5, 0}
+                                      };
+            positionsToBuildAround3 = new List<int[]>
+                                      {
+                                          new[] {-1, -1},
+                                          new[] {0, -1},
+                                          new[] {1, -1},
+                                          new[] {2, -1},
+                                          new[] {3, -1},
+
+                                          new[] {3, 0},
+                                          new[] {3, 1},
+                                          new[] {3, 2},
+                                          new[] {3, 3},
+
+                                          new[] {2, 3},
+                                          new[] {1, 3},
+                                          new[] {0, 3},
+                                          new[] {-1, 3},
+
+                                          new[] {-1, 2},
+                                          new[] {-1, 1},
+                                          new[] {-1, 0}
+                                      };
+            positionsToBuildAround2 = new List<int[]>
+                                      {
+                                          new[] {-1, -1},
+                                          new[] {-1, 0},
+                                          new[] {-1, 1},
+                                          new[] {-1, 2},
+                                          new[] {0, 2},
+                                          new[] {1, 2},
+                                          new[] {2, 2},
+                                          new[] {2, 1},
+                                          new[] {2, 0},
+                                          new[] {2, -1},
+                                          new[] {1, -1},
+                                          new[] {0, -1},
+                                      };
         }
 
         public Action GetAction(PlayerView playerView, DebugInterface debugInterface)
@@ -79,38 +149,22 @@ namespace Aicup2020
         {
             var buildingSize = View.EntityProperties.Single(ep => ep.Key == building.EntityType).Value.Size;
 
-            var positionsToBuildAround5 = new List<int[]>
-                                          {
-                                              new[] {-1, -1},
-                                              new[] {0, -1},
-                                              new[] {1, -1},
-                                              new[] {2, -1},
-                                              new[] {3, -1},
-                                              new[] {4, -1},
-                                              new[] {5, -1},
+            List<int[]> targetCollection;
 
-                                              new[] {-1, 0},
-                                              new[] {-1, 1},
-                                              new[] {-1, 2},
-                                              new[] {-1, 3},
-                                              new[] {-1, 4},
-                                              new[] {-1, 5},
+            if (buildingSize == 5)
+            {
+                targetCollection = positionsToBuildAround5;
+            }
+            else if (buildingSize == 3)
+            {
+                targetCollection = positionsToBuildAround3;
+            }
+            else
+            {
+                targetCollection = positionsToBuildAround2;
+            }
 
-                                              new[] {0, 5},
-                                              new[] {1, 5},
-                                              new[] {2, 5},
-                                              new[] {3, 5},
-                                              new[] {4, 5},
-                                              new[] {5, 5},
-
-                                              new[] {5, 4},
-                                              new[] {5, 3},
-                                              new[] {5, 2},
-                                              new[] {5, 1},
-                                              new[] {5, 0}
-                                          };
-
-            var rndPositionToBuild = positionsToBuildAround5.ElementAt(new Random().Next(positionsToBuildAround5.Count));
+            var rndPositionToBuild = targetCollection.ElementAt(new Random().Next(targetCollection.Count));
 
             var positionToBuild = new Vec2Int(building.Position.X + rndPositionToBuild.ElementAt(0),
                                               building.Position.Y + rndPositionToBuild.ElementAt(1));
@@ -142,7 +196,7 @@ namespace Aicup2020
             {
                 foreach (var brokenBuilding in Around.MyBuildingsBroken)
                 {
-                    var nearestBuilder = Around.GetNearestEntityOfType(brokenBuilding, PlayerType.My, EntityType.BuilderUnit);
+                    var nearestBuilder = Around.GetNearestEntityOfType(brokenBuilding.Position, PlayerType.My, EntityType.BuilderUnit);
                     actions.Remove(nearestBuilder.Id);
 
                     var moveAction = new MoveAction(brokenBuilding.Position, true, false);
@@ -168,21 +222,23 @@ namespace Aicup2020
         private void SendNearestWorkerToBuild(EntityType type)
         {
             var buildingSize = View.EntityProperties.Single(ep => ep.Key == type).Value.Size;
-            var workersWhoCanBuild = Around.MyUnitsWorkers.Where(w => w.GetMappingAround(buildingSize).HasPlaceToBuildAround(Around, buildingSize)).ToList();
-
-            if (!workersWhoCanBuild.Any())
+            var workersWhoCanBuildRightHereRightNow = Around.MyUnitsWorkers.Where(w => w.GetMappingAround(buildingSize).HasPlaceToBuildAround(Around, buildingSize)).ToList();
+            if (workersWhoCanBuildRightHereRightNow.Any()) // once can build right here right now
             {
-                return;
+                var workerWhoCanBuild = workersWhoCanBuildRightHereRightNow.First();
+                var mappingAround = workerWhoCanBuild.GetMappingAround(buildingSize);
+                var pointToBuild = mappingAround.GetFirstPointToBuildAround(workerWhoCanBuild, Around, buildingSize);
+                actions.Remove(workerWhoCanBuild.Id);
+                actions.Add(workerWhoCanBuild.Id, new EntityAction(null, new BuildAction(type, pointToBuild), null, null));
             }
+            // else // no who can build right here right now, need to find nearest place
+            // {
+            //     var pointToBuild = Around.FreePoints.GetFirstPointToBuildNear(Around, buildingSize);
+            //     var workerWhoCanBuild = Around.GetNearestEntityOfType(pointToBuild, PlayerType.My, EntityType.BuilderUnit);
+            //     actions.Remove(workerWhoCanBuild.Id);
+            //     actions.Add(workerWhoCanBuild.Id, new EntityAction(null, new BuildAction(type, pointToBuild), null, null));
+            // }
 
-            var workerWhoCanBuild = workersWhoCanBuild.First();
-
-            var mappingAround = workerWhoCanBuild.GetMappingAround(buildingSize);
-
-            var pointToBuild = mappingAround.GetFirstPlaceToBuild(workerWhoCanBuild, Around, buildingSize);
-
-            actions.Remove(workerWhoCanBuild.Id);
-            actions.Add(workerWhoCanBuild.Id, new EntityAction(null, new BuildAction(type, pointToBuild), null, null));
         }
 
         private void CommandUnitsRanged()
