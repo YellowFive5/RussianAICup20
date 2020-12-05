@@ -19,6 +19,9 @@ namespace Aicup2020
         private readonly List<int[]> positionsToBuildAround5;
         private readonly List<int[]> positionsToBuildAround3;
         private readonly List<int[]> positionsToBuildAround2;
+        private readonly Random rnd;
+        private readonly int[] twitchPos;
+        
 
         public MyStrategy()
         {
@@ -90,6 +93,8 @@ namespace Aicup2020
                                           new[] {1, -1},
                                           new[] {0, -1},
                                       };
+            rnd = new Random();
+            twitchPos = new[] {-1, 0, 1};
         }
 
         public Action GetAction(PlayerView playerView, DebugInterface debugInterface)
@@ -231,6 +236,7 @@ namespace Aicup2020
                 actions.Remove(workerWhoCanBuild.Id);
                 actions.Add(workerWhoCanBuild.Id, new EntityAction(null, new BuildAction(type, pointToBuild), null, null));
             }
+
             // else // no who can build right here right now, need to find nearest place
             // {
             //     var pointToBuild = Around.FreePoints.GetFirstPointToBuildNear(Around, buildingSize);
@@ -238,7 +244,6 @@ namespace Aicup2020
             //     actions.Remove(workerWhoCanBuild.Id);
             //     actions.Add(workerWhoCanBuild.Id, new EntityAction(null, new BuildAction(type, pointToBuild), null, null));
             // }
-
         }
 
         private void CommandUnitsRanged()
@@ -257,7 +262,13 @@ namespace Aicup2020
                 }
                 else
                 {
-                    moveAction = new MoveAction(rangedUnit.Position, true, false);
+                    var rndTwitchPosition = new Vec2Int(rangedUnit.Position.X + twitchPos.ElementAt(rnd.Next(twitchPos.Length)),
+                                                        rangedUnit.Position.Y + twitchPos.ElementAt(rnd.Next(twitchPos.Length)));
+                    moveAction = new MoveAction(rndTwitchPosition.CheckPointInside()
+                                                    ? rndTwitchPosition
+                                                    : rangedUnit.Position,
+                                                true,
+                                                false);
                 }
 
                 action = new EntityAction(moveAction, null, attackAction, null);
@@ -282,7 +293,13 @@ namespace Aicup2020
                 }
                 else
                 {
-                    moveAction = new MoveAction(meleeUnit.Position, true, false);
+                    var rndTwitchPosition = new Vec2Int(meleeUnit.Position.X + twitchPos.ElementAt(rnd.Next(twitchPos.Length)),
+                                                        meleeUnit.Position.Y + twitchPos.ElementAt(rnd.Next(twitchPos.Length)));
+                    moveAction = new MoveAction(rndTwitchPosition.CheckPointInside()
+                                                    ? rndTwitchPosition
+                                                    : meleeUnit.Position,
+                                                true,
+                                                false);
                 }
 
                 action = new EntityAction(moveAction, null, attackAction, null);

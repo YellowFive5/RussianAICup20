@@ -18,7 +18,7 @@ namespace Aicup2020
             }
         }
 
-        private static bool CheckPointInside(this Vec2Int point)
+        public static bool CheckPointInside(this Vec2Int point)
         {
             return point.X >= 0 && point.Y >= 0 && point.X < 80 && point.Y < 80;
         }

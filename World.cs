@@ -18,7 +18,7 @@ namespace Aicup2020
         public readonly double[] aggressiveBehaviorUnitsRatio = {0.2, 0.8, 0.0};
 
         public readonly double[] passiveBehaviorUnitsRatio = {0.8, 0.2, 0.0};
-        public readonly double[] passiveBehaviorPlusUnitsRatio = {0.5, 0.5, 0.0};
+        public readonly double[] passiveBehaviorPlusUnitsRatio = {0.3, 0.7, 0.0};
 
         public double[] unitsRatio;
         public int PopulationProvide { get; private set; }
