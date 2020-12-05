@@ -12,9 +12,14 @@ namespace Aicup2020
     public class World
     {
         public BehaviorType Behavior { get; private set; }
+        public Vec2Int Zero { get; }
+        public Vec2Int SquareOfMyInterests { get; private set; }
 
         public readonly double[] aggressiveBehaviorUnitsRatio = {0.2, 0.8, 0.0};
+
         public readonly double[] passiveBehaviorUnitsRatio = {0.8, 0.2, 0.0};
+        public readonly double[] passiveBehaviorPlusUnitsRatio = {0.5, 0.5, 0.0};
+
         public double[] unitsRatio;
         public int PopulationProvide { get; private set; }
         public int PopulationUse { get; private set; }
@@ -50,7 +55,7 @@ namespace Aicup2020
 
         public IEnumerable<Entity> SpiceMilange { get; private set; }
         public List<Entity> BusySpiceMilange { get; private set; }
-        
+
         public List<Vec2Int> Points { get; }
 
         public List<Vec2Int> NotFreePoints { get; private set; }
@@ -99,6 +104,7 @@ namespace Aicup2020
 
         public World()
         {
+            Zero = new Vec2Int(0, 0);
             Points = new List<Vec2Int>();
             for (int x = 0; x < 80; x++)
             {
@@ -108,6 +114,7 @@ namespace Aicup2020
                 }
             }
         }
+
         public void Scan(PlayerView view)
         {
             Me = view.Players.Single(p => p.Id == view.MyId);
@@ -162,21 +169,40 @@ namespace Aicup2020
                         for (var y = 0; y < size; y++)
                         {
                             NotFreePoints.Add(new Vec2Int(entity.Position.X + x,
-                                                         entity.Position.Y + y));
+                                                          entity.Position.Y + y));
                         }
                     }
                 }
             }
-            
+
+            // var soi_x = 0;
+            // var soi_y = 0;
+            // foreach (var ett in MyEntities)
+            // {
+            //     if (ett.Position.X > soi_x)
+            //     {
+            //         soi_x = ett.Position.X;
+            //     }
+            //
+            //     if (ett.Position.Y > soi_y)
+            //     {
+            //         soi_y = ett.Position.Y;
+            //     }
+            // }
+            //
+            // SquareOfMyInterests = new Vec2Int(soi_x + 1, soi_y + 1);
+            //
             // FreePoints = Points.Except(NotFreePoints).ToList();
 
-            ChooseBehavior();
+            ChooseBehavior(view);
         }
 
-        private void ChooseBehavior()
+        private void ChooseBehavior(PlayerView view)
         {
             if (EnemyEntities.Any() &&
-                MyEntities.Any(e => GetDistance(GetNearestEntity(e, PlayerType.Enemy).Position, e.Position) < 20))
+                (MyEntities.Any(e => GetDistance(GetNearestEntity(e, PlayerType.Enemy).Position, e.Position) < 10)))
+                // ||
+                // EnemyUnits.Any(e => e.Position.X <= SquareOfMyInterests.X && e.Position.Y <= SquareOfMyInterests.Y)))
             {
                 Behavior = BehaviorType.Aggressive;
                 unitsRatio = aggressiveBehaviorUnitsRatio;
@@ -185,6 +211,10 @@ namespace Aicup2020
             {
                 Behavior = BehaviorType.Passive;
                 unitsRatio = passiveBehaviorUnitsRatio;
+                if (view.CurrentTick > 250)
+                {
+                    unitsRatio = passiveBehaviorPlusUnitsRatio;
+                }
             }
         }
 
