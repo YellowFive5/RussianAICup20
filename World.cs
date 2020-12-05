@@ -50,7 +50,7 @@ namespace Aicup2020
         #endregion
 
         public Vec2Int Zero;
-        public IEnumerable<Entity> SpiceMilange { get; private set; }
+        public List<Entity> SpiceMilange { get; private set; }
         public List<Entity> BusySpiceMilange { get; private set; }
 
         // public List<Vec2Int> Points { get; }
@@ -61,19 +61,19 @@ namespace Aicup2020
 
         public IEnumerable<Player> EnemyPlayers { get; private set; }
         public IEnumerable<Entity> EnemyEntities { get; private set; }
-        public IEnumerable<Entity> EnemyBuildings => EnemyBuildingsWalls.Union(EnemyBuildingsHouses).Union(EnemyBuildingsWorkers).Union(EnemyBuildingsMelees).Union(EnemyBuildingsRanged).ToList();
+        public IEnumerable<Entity> EnemyBuildings => EnemyEntities.Where(e => e.EntityType == EntityType.House || e.EntityType == EntityType.BuilderBase || e.EntityType == EntityType.MeleeBase || e.EntityType == EntityType.RangedBase || e.EntityType == EntityType.Turret);
 
-        public IEnumerable<Entity> EnemyBuildingsWalls => EnemyEntities.Where(e => e.EntityType == EntityType.Wall).ToArray();
-        public IEnumerable<Entity> EnemyBuildingsHouses => EnemyEntities.Where(e => e.EntityType == EntityType.House).ToArray();
-        public IEnumerable<Entity> EnemyBuildingsWorkers => EnemyEntities.Where(e => e.EntityType == EntityType.BuilderBase).ToArray();
-        public IEnumerable<Entity> EnemyBuildingsMelees => EnemyEntities.Where(e => e.EntityType == EntityType.MeleeBase).ToArray();
-        public IEnumerable<Entity> EnemyBuildingsRanged => EnemyEntities.Where(e => e.EntityType == EntityType.RangedBase).ToArray();
-        public IEnumerable<Entity> EnemyUnits => EnemyUnitsTurrets.Union(EnemyUnitsWorkers).Union(EnemyUnitsMelees).Union(EnemyUnitsRanged).ToList();
+        public IEnumerable<Entity> EnemyBuildingsWalls => EnemyEntities.Where(e => e.EntityType == EntityType.Wall);
+        public IEnumerable<Entity> EnemyBuildingsHouses => EnemyEntities.Where(e => e.EntityType == EntityType.House);
+        public IEnumerable<Entity> EnemyBuildingsWorkers => EnemyEntities.Where(e => e.EntityType == EntityType.BuilderBase);
+        public IEnumerable<Entity> EnemyBuildingsMelees => EnemyEntities.Where(e => e.EntityType == EntityType.MeleeBase);
+        public IEnumerable<Entity> EnemyBuildingsRanged => EnemyEntities.Where(e => e.EntityType == EntityType.RangedBase);
+        public IEnumerable<Entity> EnemyUnits => EnemyEntities.Where(e => e.EntityType == EntityType.BuilderUnit || e.EntityType == EntityType.MeleeUnit || e.EntityType == EntityType.RangedUnit || e.EntityType == EntityType.Turret);
 
-        public IEnumerable<Entity> EnemyUnitsTurrets => EnemyEntities.Where(e => e.EntityType == EntityType.Turret).ToArray();
-        public IEnumerable<Entity> EnemyUnitsWorkers => EnemyEntities.Where(e => e.EntityType == EntityType.BuilderUnit).ToArray();
-        public IEnumerable<Entity> EnemyUnitsMelees => EnemyEntities.Where(e => e.EntityType == EntityType.MeleeUnit).ToArray();
-        public IEnumerable<Entity> EnemyUnitsRanged => EnemyEntities.Where(e => e.EntityType == EntityType.RangedUnit).ToArray();
+        public IEnumerable<Entity> EnemyUnitsTurrets => EnemyEntities.Where(e => e.EntityType == EntityType.Turret);
+        public IEnumerable<Entity> EnemyUnitsWorkers => EnemyEntities.Where(e => e.EntityType == EntityType.BuilderUnit);
+        public IEnumerable<Entity> EnemyUnitsMelees => EnemyEntities.Where(e => e.EntityType == EntityType.MeleeUnit);
+        public IEnumerable<Entity> EnemyUnitsRanged => EnemyEntities.Where(e => e.EntityType == EntityType.RangedUnit);
 
         #endregion
 
@@ -81,28 +81,28 @@ namespace Aicup2020
 
         public Player Me { get; private set; }
         public IEnumerable<Entity> MyEntities { get; private set; }
-        public IEnumerable<Entity> MyBuildings => MyBuildingsRanged.Union(MyBuildingsMelees).Union(MyBuildingsWorkers).Union(MyBuildingsHouses).Union(MyBuildingsWalls).Union(MyUnitsTurrets).ToList();
+        public IEnumerable<Entity> MyBuildings => MyEntities.Where(e => e.EntityType == EntityType.House || e.EntityType == EntityType.BuilderBase || e.EntityType == EntityType.MeleeBase || e.EntityType == EntityType.RangedBase || e.EntityType == EntityType.Turret);
         public IEnumerable<Entity> MyBuildingsBroken { get; private set; }
         public IEnumerable<Entity> MyUnitsBroken { get; private set; }
-        public IEnumerable<Entity> MyBuildingsWalls => MyEntities.Where(e => e.EntityType == EntityType.Wall).ToArray();
-        public IEnumerable<Entity> MyBuildingsHouses => MyEntities.Where(e => e.EntityType == EntityType.House).ToArray();
-        public IEnumerable<Entity> MyBuildingsWorkers => MyEntities.Where(e => e.EntityType == EntityType.BuilderBase).ToArray();
-        public IEnumerable<Entity> MyBuildingsMelees => MyEntities.Where(e => e.EntityType == EntityType.MeleeBase).ToArray();
-        public IEnumerable<Entity> MyBuildingsRanged => MyEntities.Where(e => e.EntityType == EntityType.RangedBase).ToArray();
-        public IEnumerable<Entity> MyUnits => MyUnitsWorkers.Union(MyUnitsMelees).Union(MyUnitsRanged).Union(MyUnitsTurrets).ToList();
-        public IEnumerable<Entity> MyUnitsTurrets => MyEntities.Where(e => e.EntityType == EntityType.Turret).ToArray();
+        public IEnumerable<Entity> MyBuildingsWalls => MyEntities.Where(e => e.EntityType == EntityType.Wall);
+        public IEnumerable<Entity> MyBuildingsHouses => MyEntities.Where(e => e.EntityType == EntityType.House);
+        public IEnumerable<Entity> MyBuildingsWorkers => MyEntities.Where(e => e.EntityType == EntityType.BuilderBase);
+        public IEnumerable<Entity> MyBuildingsMelees => MyEntities.Where(e => e.EntityType == EntityType.MeleeBase);
+        public IEnumerable<Entity> MyBuildingsRanged => MyEntities.Where(e => e.EntityType == EntityType.RangedBase);
+        public IEnumerable<Entity> MyUnits => MyEntities.Where(e => e.EntityType == EntityType.BuilderUnit || e.EntityType == EntityType.MeleeUnit || e.EntityType == EntityType.RangedUnit || e.EntityType == EntityType.Turret);
+        public IEnumerable<Entity> MyUnitsTurrets => MyEntities.Where(e => e.EntityType == EntityType.Turret);
 
-        public IEnumerable<Entity> MyUnitsWorkers => MyEntities.Where(e => e.EntityType == EntityType.BuilderUnit).ToArray();
+        public IEnumerable<Entity> MyUnitsWorkers => MyEntities.Where(e => e.EntityType == EntityType.BuilderUnit);
 
         // public List<Entity> MyUnitsBusyWorkers { get; private set; }
-        public IEnumerable<Entity> MyUnitsMelees => MyEntities.Where(e => e.EntityType == EntityType.MeleeUnit).ToArray();
-        public IEnumerable<Entity> MyUnitsRanged => MyEntities.Where(e => e.EntityType == EntityType.RangedUnit).ToArray();
+        public IEnumerable<Entity> MyUnitsMelees => MyEntities.Where(e => e.EntityType == EntityType.MeleeUnit);
+        public IEnumerable<Entity> MyUnitsRanged => MyEntities.Where(e => e.EntityType == EntityType.RangedUnit);
 
         #endregion
 
         public World()
         {
-            Zero = new Vec2Int(0,0);
+            Zero = new Vec2Int(0, 0);
             // Points = new List<Vec2Int>();
             // for (int x = 0; x < 80; x++)
             // {
@@ -116,13 +116,13 @@ namespace Aicup2020
         public void Scan(PlayerView view)
         {
             Me = view.Players.Single(p => p.Id == view.MyId);
-            EnemyPlayers = view.Players.Where(p => p.Id != view.MyId).ToArray();
-            SpiceMilange = view.Entities.Where(e => e.EntityType == EntityType.Resource).ToArray();
+            EnemyPlayers = view.Players.Where(p => p.Id != view.MyId).ToList();
+            SpiceMilange = view.Entities.Where(e => e.EntityType == EntityType.Resource).ToList();
             BusySpiceMilange = new List<Entity>();
-            EnemyEntities = view.Entities.Where(e => e.PlayerId != view.MyId && e.EntityType != EntityType.Resource).ToArray();
-            MyEntities = view.Entities.Where(e => e.PlayerId == view.MyId).ToArray();
-            MyBuildingsBroken = MyBuildings.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth);
-            MyUnitsBroken = MyUnits.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth);
+            EnemyEntities = view.Entities.Where(e => e.PlayerId != view.MyId && e.EntityType != EntityType.Resource).ToList();
+            MyEntities = view.Entities.Where(e => e.PlayerId == view.MyId).ToList();
+            MyBuildingsBroken = MyBuildings.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth).ToList();
+            MyUnitsBroken = MyUnits.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth).ToList();
             // MyUnitsBusyWorkers = new List<Entity>();
 
             // todo delete -1 in another round
@@ -182,7 +182,7 @@ namespace Aicup2020
 
         private void ChooseBehavior()
         {
-            if (EnemyEntities.Any() && 
+            if (EnemyEntities.Any() &&
                 MyEntities.Any(e => GetDistance(GetNearestEntity(e.Position, PlayerType.Enemy).Position, e.Position) < 6))
                 // ||
                 // EnemyUnits.Any(eu => GetDistance(eu.Position, Zero) <= 35))
@@ -328,7 +328,8 @@ namespace Aicup2020
                 }
             }
 
-            return nearestEntity;        }
+            return nearestEntity;
+        }
 
         public Entity GetNearestNotBusySpice(Vec2Int sourcePosition)
         {
