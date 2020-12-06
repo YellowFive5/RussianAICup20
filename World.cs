@@ -32,10 +32,16 @@ namespace Aicup2020
                                                Me.Resource >= RangedBuildingCost &&
                                                !NeedBuildBuildingWorkers;
 
-        public bool NeedBuildHouse => (Behavior == BehaviorType.Passive || PopulationFree <= 0) &&
+        public bool NeedBuildHouse => PopulationFree <= 2 &&
                                       Me.Resource >= HouseBuildingCost &&
                                       !NeedBuildBuildingWorkers &&
                                       !NeedBuildBuildingRanged;
+
+        public bool NeedBuildTurrets => MyBuildingsHouses.Count() >= MyUnitsTurrets.Count() &&
+                                        Me.Resource >= TurretUnitCost &&
+                                        !NeedBuildHouse &&
+                                        !NeedBuildBuildingWorkers &&
+                                        !NeedBuildBuildingRanged;
 
         public bool RepairNeeds => MyBuildingsBroken.Any();
 

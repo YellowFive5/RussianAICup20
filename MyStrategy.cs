@@ -218,7 +218,11 @@ namespace Aicup2020
             {
                 SendNearestWorkerToBuild(EntityType.RangedBase);
             }
-            else if (Around.NeedBuildHouse)
+            else if (Around.NeedBuildTurrets)
+            {
+                SendNearestWorkerToBuild(EntityType.Turret);
+            }
+            else if  (Around.NeedBuildHouse)
             {
                 SendNearestWorkerToBuild(EntityType.House);
             }
