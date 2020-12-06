@@ -86,7 +86,7 @@ namespace Aicup2020
 
         public Player Me { get; private set; }
         public IEnumerable<Entity> MyEntities { get; private set; }
-        public IEnumerable<Entity> MyBuildings => MyBuildingsRanged.Union(MyBuildingsMelees).Union(MyBuildingsWorkers).Union(MyBuildingsHouses).Union(MyBuildingsWalls).ToList();
+        public IEnumerable<Entity> MyBuildings => MyBuildingsRanged.Union(MyBuildingsMelees).Union(MyBuildingsWorkers).Union(MyBuildingsHouses).Union(MyBuildingsWalls).Union(MyUnitsTurrets).ToList();
         public IEnumerable<Entity> MyBuildingsBroken { get; private set; }
         public IEnumerable<Entity> MyUnitsBroken { get; private set; }
         public IEnumerable<Entity> MyBuildingsWalls => MyEntities.Where(e => e.EntityType == EntityType.Wall).ToArray();
@@ -99,6 +99,7 @@ namespace Aicup2020
         public IEnumerable<Entity> MyUnitsWorkers => MyEntities.Where(e => e.EntityType == EntityType.BuilderUnit).ToArray();
         public IEnumerable<Entity> MyUnitsMelees => MyEntities.Where(e => e.EntityType == EntityType.MeleeUnit).ToArray();
         public IEnumerable<Entity> MyUnitsRanged => MyEntities.Where(e => e.EntityType == EntityType.RangedUnit).ToArray();
+        public Entity MyTopBuilding;
 
         #endregion
 
@@ -193,6 +194,16 @@ namespace Aicup2020
             // SquareOfMyInterests = new Vec2Int(soi_x + 1, soi_y + 1);
             //
             // FreePoints = Points.Except(NotFreePoints).ToList();
+
+            var sum = 0;
+            foreach (var building in MyBuildings)
+            {
+                if (building.Position.X + building.Position.Y > sum)
+                {
+                    sum = building.Position.X + building.Position.Y;
+                    MyTopBuilding = building;
+                }
+            }
 
             ChooseBehavior(view);
         }

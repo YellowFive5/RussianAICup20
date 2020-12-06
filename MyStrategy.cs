@@ -21,7 +21,7 @@ namespace Aicup2020
         private readonly List<int[]> positionsToBuildAround2;
         private readonly Random rnd;
         private readonly int[] twitchPos;
-        
+
 
         public MyStrategy()
         {
@@ -262,8 +262,8 @@ namespace Aicup2020
                 }
                 else
                 {
-                    var rndTwitchPosition = new Vec2Int(rangedUnit.Position.X + twitchPos.ElementAt(rnd.Next(twitchPos.Length)),
-                                                        rangedUnit.Position.Y + twitchPos.ElementAt(rnd.Next(twitchPos.Length)));
+                    var rndTwitchPosition = new Vec2Int(Around.MyTopBuilding.Position.X + twitchPos.ElementAt(rnd.Next(twitchPos.Length)),
+                                                        Around.MyTopBuilding.Position.Y + twitchPos.ElementAt(rnd.Next(twitchPos.Length)));
                     moveAction = new MoveAction(rndTwitchPosition.CheckPointInside()
                                                     ? rndTwitchPosition
                                                     : rangedUnit.Position,
@@ -293,8 +293,8 @@ namespace Aicup2020
                 }
                 else
                 {
-                    var rndTwitchPosition = new Vec2Int(meleeUnit.Position.X + twitchPos.ElementAt(rnd.Next(twitchPos.Length)),
-                                                        meleeUnit.Position.Y + twitchPos.ElementAt(rnd.Next(twitchPos.Length)));
+                    var rndTwitchPosition = new Vec2Int(Around.MyTopBuilding.Position.X + twitchPos.ElementAt(rnd.Next(twitchPos.Length)),
+                                                        Around.MyTopBuilding.Position.Y + twitchPos.ElementAt(rnd.Next(twitchPos.Length)));
                     moveAction = new MoveAction(rndTwitchPosition.CheckPointInside()
                                                     ? rndTwitchPosition
                                                     : meleeUnit.Position,
