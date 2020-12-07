@@ -107,6 +107,7 @@ namespace Aicup2020
 
             CommandBuildingsWorkers();
             CommandBuildingsRange();
+            CommandBuildingsMelee();
 
             CommandUnitsWorkers();
             CommandUnitsRanged();
@@ -146,6 +147,22 @@ namespace Aicup2020
                 actions.Add(rangeBuilding.Id,
                             needBuildRanged
                                 ? new EntityAction(null, new BuildAction(EntityType.RangedUnit, GetPositionToBuildUnitAround(rangeBuilding)), null, null)
+                                : new EntityAction(null, null, null, null));
+            }
+        }
+
+        private void CommandBuildingsMelee()
+        {
+            var meleeUnitsCount = Around.PopulationProvide * Around.unitsRatio[2];
+
+            foreach (var meleeBuilding in Around.MyBuildingsMelees)
+            {
+                var needBuildMelee = Around.MyUnitsMelees.Count() < meleeUnitsCount
+                                      && Around.Me.Resource >= Around.MeleeUnitCost;
+
+                actions.Add(meleeBuilding.Id,
+                            needBuildMelee
+                                ? new EntityAction(null, new BuildAction(EntityType.MeleeUnit, GetPositionToBuildUnitAround(meleeBuilding)), null, null)
                                 : new EntityAction(null, null, null, null));
             }
         }
@@ -222,7 +239,7 @@ namespace Aicup2020
             {
                 SendNearestWorkerToBuild(EntityType.Turret);
             }
-            else if  (Around.NeedBuildHouse)
+            else if (Around.NeedBuildHouse)
             {
                 SendNearestWorkerToBuild(EntityType.House);
             }

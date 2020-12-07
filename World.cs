@@ -15,10 +15,10 @@ namespace Aicup2020
         public Vec2Int Zero { get; }
         public Vec2Int SquareOfMyInterests { get; private set; }
 
-        public readonly double[] aggressiveBehaviorUnitsRatio = {0.2, 0.8, 0.0};
+        public readonly double[] aggressiveBehaviorUnitsRatio = {0.2, 0.4, 0.4};
 
-        public readonly double[] passiveBehaviorUnitsRatio = {0.8, 0.2, 0.0};
-        public readonly double[] passiveBehaviorPlusUnitsRatio = {0.3, 0.7, 0.0};
+        public readonly double[] passiveBehaviorUnitsRatio = {0.7, 0.2, 0.1};
+        public readonly double[] passiveBehaviorPlusUnitsRatio = {0.3, 0.4, 0.3};
 
         public double[] unitsRatio;
         public int PopulationProvide { get; private set; }
