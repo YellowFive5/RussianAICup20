@@ -210,7 +210,7 @@ namespace Aicup2020
         public static Vec2Int GetFirstPointToBuildNear(this List<Vec2Int> freePoints, World around, int buildingSize)
         {
             var pointsWhereCanBuild = new List<Vec2Int>();
-            
+
             foreach (var freePoint in around.FreePoints)
             {
                 var map = new List<Vec2Int>();
@@ -223,13 +223,13 @@ namespace Aicup2020
                         map.CheckPointInsideAndSave(_x, _y);
                     }
                 }
-            
+
                 if (map.CanBuildHere(around, buildingSize))
                 {
                     pointsWhereCanBuild.Add(freePoint);
                 }
             }
-            
+
             return pointsWhereCanBuild
                    .OrderBy(p => p.X + p.Y)
                    .ElementAtOrDefault(0);

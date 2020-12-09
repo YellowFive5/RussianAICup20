@@ -121,15 +121,10 @@ namespace Aicup2020
 
         private void CommandBuildingsWorkers()
         {
-            var workerUnitsCount = Around.PopulationProvide * Around.unitsRatio[0];
-
             foreach (var builderBuilding in Around.MyBuildingsWorkers)
             {
-                var needBuildBuilders = Around.MyUnitsWorkers.Count() < workerUnitsCount
-                                        && Around.Me.Resource >= Around.WorkerUnitCost;
-
                 actions.Add(builderBuilding.Id,
-                            needBuildBuilders
+                            Around.NeedBuildBuilders
                                 ? new EntityAction(null, new BuildAction(EntityType.BuilderUnit, GetPositionToBuildUnitAround(builderBuilding)), null, null)
                                 : new EntityAction(null, null, null, null));
             }
@@ -137,15 +132,10 @@ namespace Aicup2020
 
         private void CommandBuildingsRange()
         {
-            var rangeUnitsCount = Around.PopulationProvide * Around.unitsRatio[1];
-
             foreach (var rangeBuilding in Around.MyBuildingsRanged)
             {
-                var needBuildRanged = Around.MyUnitsRanged.Count() < rangeUnitsCount
-                                      && Around.Me.Resource >= Around.RangedUnitCost;
-
                 actions.Add(rangeBuilding.Id,
-                            needBuildRanged
+                            Around.NeedBuildRanged
                                 ? new EntityAction(null, new BuildAction(EntityType.RangedUnit, GetPositionToBuildUnitAround(rangeBuilding)), null, null)
                                 : new EntityAction(null, null, null, null));
             }
@@ -153,15 +143,10 @@ namespace Aicup2020
 
         private void CommandBuildingsMelee()
         {
-            var meleeUnitsCount = Around.PopulationProvide * Around.unitsRatio[2];
-
             foreach (var meleeBuilding in Around.MyBuildingsMelees)
             {
-                var needBuildMelee = Around.MyUnitsMelees.Count() < meleeUnitsCount
-                                      && Around.Me.Resource >= Around.MeleeUnitCost;
-
                 actions.Add(meleeBuilding.Id,
-                            needBuildMelee
+                            Around.NeedBuildMelee
                                 ? new EntityAction(null, new BuildAction(EntityType.MeleeUnit, GetPositionToBuildUnitAround(meleeBuilding)), null, null)
                                 : new EntityAction(null, null, null, null));
             }
@@ -220,10 +205,19 @@ namespace Aicup2020
                 {
                     var nearestBuilder = Around.GetNearestEntityOfType(brokenBuilding.Position, PlayerType.My, EntityType.BuilderUnit);
                     actions.Remove(nearestBuilder.Id);
-
                     var moveAction = new MoveAction(brokenBuilding.Position, true, false);
                     var repairAction = new RepairAction(brokenBuilding.Id);
                     actions.Add(nearestBuilder.Id, new EntityAction(moveAction, null, null, repairAction));
+
+                    var bigDamage = brokenBuilding.Health <= View.EntityProperties.Single(ep => ep.Key == brokenBuilding.EntityType).Value.MaxHealth * 0.75;
+                    if (bigDamage)
+                    {
+                        nearestBuilder = Around.GetNearestEntityOfType(brokenBuilding.Position, PlayerType.My, EntityType.BuilderUnit, 1);
+                        actions.Remove(nearestBuilder.Id);
+                        moveAction = new MoveAction(brokenBuilding.Position, true, false);
+                        repairAction = new RepairAction(brokenBuilding.Id);
+                        actions.Add(nearestBuilder.Id, new EntityAction(moveAction, null, null, repairAction));
+                    }
                 }
             }
 

@@ -17,13 +17,24 @@ namespace Aicup2020
 
         public readonly double[] aggressiveBehaviorUnitsRatio = {0.2, 0.4, 0.4};
 
-        public readonly double[] passiveBehaviorUnitsRatio = {0.7, 0.2, 0.1};
-        public readonly double[] passiveBehaviorPlusUnitsRatio = {0.3, 0.4, 0.3};
+        public readonly double[] passiveBehaviorUnitsRatio = {0.6, 0.2, 0.2};
+        public readonly double[] passiveBehaviorPlusUnitsRatio = {0.2, 0.4, 0.4};
 
         public double[] unitsRatio;
         public int PopulationProvide { get; private set; }
         public int PopulationUse { get; private set; }
         public int PopulationFree => PopulationProvide - PopulationUse;
+
+        public bool NeedBuildBuilders => MyUnitsWorkersCount < PopulationProvide * unitsRatio[0]
+                                         && Me.Resource >= WorkerUnitCost;
+
+        public bool NeedBuildRanged => !NeedBuildBuilders &&
+                                       MyUnitsRangedCount < PopulationProvide * unitsRatio[1]
+                                       && Me.Resource >= RangedUnitCost;
+
+        public bool NeedBuildMelee => !NeedBuildBuilders &&
+                                      MyUnitsMeleesCount < PopulationProvide * unitsRatio[2]
+                                      && Me.Resource >= MeleeUnitCost;
 
         public bool NeedBuildBuildingWorkers => !MyBuildingsWorkers.Any() &&
                                                 Me.Resource >= WorkersBuildingCost;
@@ -32,18 +43,20 @@ namespace Aicup2020
                                                Me.Resource >= RangedBuildingCost &&
                                                !NeedBuildBuildingWorkers;
 
-        public bool NeedBuildHouse => PopulationFree <= 2 &&
+        public bool NeedBuildHouse => !RepairNeeds &&
+                                      PopulationFree <= 2 &&
                                       Me.Resource >= HouseBuildingCost &&
                                       !NeedBuildBuildingWorkers &&
                                       !NeedBuildBuildingRanged;
 
-        public bool NeedBuildTurrets => MyBuildingsHouses.Count() >= MyUnitsTurrets.Count() &&
+        public bool NeedBuildTurrets => !RepairNeeds &&
+                                        MyBuildingsHousesCount >= MyUnitsTurretsCount &&
                                         Me.Resource >= TurretUnitCost &&
                                         !NeedBuildHouse &&
                                         !NeedBuildBuildingWorkers &&
                                         !NeedBuildBuildingRanged;
 
-        public bool RepairNeeds => MyBuildingsBroken.Any();
+        public bool RepairNeeds { get; set; }
 
         #region Costs
 
@@ -103,6 +116,11 @@ namespace Aicup2020
         public IEnumerable<Entity> MyUnits => MyUnitsWorkers.Union(MyUnitsMelees).Union(MyUnitsRanged).Union(MyUnitsTurrets).ToList();
         public IEnumerable<Entity> MyUnitsTurrets => MyEntities.Where(e => e.EntityType == EntityType.Turret).ToArray();
         public IEnumerable<Entity> MyUnitsWorkers => MyEntities.Where(e => e.EntityType == EntityType.BuilderUnit).ToArray();
+        public int MyUnitsWorkersCount { get; set; }
+        public int MyUnitsRangedCount { get; set; }
+        public int MyUnitsMeleesCount { get; set; }
+        public int MyBuildingsHousesCount { get; set; }
+        public int MyUnitsTurretsCount { get; set; }
         public IEnumerable<Entity> MyUnitsMelees => MyEntities.Where(e => e.EntityType == EntityType.MeleeUnit).ToArray();
         public IEnumerable<Entity> MyUnitsRanged => MyEntities.Where(e => e.EntityType == EntityType.RangedUnit).ToArray();
         public Entity MyTopBuilding;
@@ -132,6 +150,12 @@ namespace Aicup2020
             MyEntities = view.Entities.Where(e => e.PlayerId == view.MyId).ToArray();
             MyBuildingsBroken = MyBuildings.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth).Union(MyUnitsTurrets.Where(t => t.Health < view.EntityProperties.Single(ep => ep.Key == t.EntityType).Value.MaxHealth));
             MyUnitsBroken = MyUnits.Where(b => b.Health < view.EntityProperties.Single(ep => ep.Key == b.EntityType).Value.MaxHealth);
+            RepairNeeds = MyBuildingsBroken.Any();
+            MyUnitsWorkersCount = MyUnitsWorkers.Count();
+            MyUnitsRangedCount = MyUnitsRanged.Count();
+            MyUnitsMeleesCount = MyUnitsMelees.Count();
+            MyBuildingsHousesCount = MyBuildingsHouses.Count();
+            MyUnitsTurretsCount = MyUnitsTurrets.Count();
 
             // todo delete -1 in another round
             HouseBuildingCost = view.EntityProperties.Single(ep => ep.Key == EntityType.House).Value.InitialCost;
@@ -235,7 +259,7 @@ namespace Aicup2020
             }
         }
 
-        public Entity GetNearestEntityOfType(Vec2Int sourcePoint, PlayerType playerType, EntityType type)
+        public Entity GetNearestEntityOfType(Vec2Int sourcePoint, PlayerType playerType, EntityType type, int index = 0)
         {
             IEnumerable<Entity> targetCollection;
 
@@ -321,20 +345,29 @@ namespace Aicup2020
                     throw new ArgumentOutOfRangeException(nameof(playerType), playerType, null);
             }
 
-            double distanceBetween = 1000;
+            double distance1 = 1000;
+            double distance2 = 1000;
             var nearestEntity = new Entity();
+            var nearestEntity2 = new Entity();
 
             foreach (var ett in targetCollection) // todo to LINQ
             {
                 var dst = GetDistance(ett.Position, sourcePoint);
-                if (dst < distanceBetween)
+                if (dst < distance1)
                 {
-                    distanceBetween = dst;
+                    distance1 = dst;
                     nearestEntity = ett;
+                }
+                else if (dst < distance2)
+                {
+                    distance2 = dst;
+                    nearestEntity2 = ett;
                 }
             }
 
-            return nearestEntity;
+            return index == 0
+                       ? nearestEntity
+                       : nearestEntity2;
         }
 
         public Entity GetNearestEntity(Entity sourceEntity, PlayerType playerType)

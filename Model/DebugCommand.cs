@@ -19,6 +19,10 @@ namespace Aicup2020.Model
                     return Add.ReadFrom(reader);
                 case Clear.TAG:
                     return Clear.ReadFrom(reader);
+                case SetAutoFlush.TAG:
+                    return SetAutoFlush.ReadFrom(reader);
+                case Flush.TAG:
+                    return Flush.ReadFrom(reader);
                 default:
                     throw new Exception("Unexpected tag value");
             }
@@ -59,6 +63,50 @@ namespace Aicup2020.Model
             public static new Clear ReadFrom(BinaryReader reader)
             {
                 var result = new Clear();
+                return result;
+            }
+
+            public override void WriteTo(BinaryWriter writer)
+            {
+                writer.Write(TAG);
+            }
+        }
+
+        public class SetAutoFlush : DebugCommand
+        {
+            public const int TAG = 2;
+            public bool Enable { get; set; }
+
+            public SetAutoFlush()
+            {
+            }
+
+            public SetAutoFlush(bool enable)
+            {
+                Enable = enable;
+            }
+
+            public static new SetAutoFlush ReadFrom(BinaryReader reader)
+            {
+                var result = new SetAutoFlush();
+                result.Enable = reader.ReadBoolean();
+                return result;
+            }
+
+            public override void WriteTo(BinaryWriter writer)
+            {
+                writer.Write(TAG);
+                writer.Write(Enable);
+            }
+        }
+
+        public class Flush : DebugCommand
+        {
+            public const int TAG = 3;
+
+            public static new Flush ReadFrom(BinaryReader reader)
+            {
+                var result = new Flush();
                 return result;
             }
 
